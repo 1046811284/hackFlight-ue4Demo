@@ -4,6 +4,7 @@
 
 
 支持手柄: (不插手柄会崩溃)
+
   1.FrSky Taranis TX9 RC transmitter with mini USB cable
   
   2.Spektrum transmitter with WS1000 wireless simulator dongle
