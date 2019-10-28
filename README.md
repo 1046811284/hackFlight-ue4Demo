@@ -15,6 +15,10 @@
   
   5.Logitech Extreme Pro 3D joystick
   
+  环境问题:
+     1)vs报错,找不到dll:  安装微软64位运行库
+     
+  
   
   
   
