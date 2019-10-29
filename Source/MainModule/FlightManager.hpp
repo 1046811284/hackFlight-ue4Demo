@@ -16,6 +16,7 @@ class FFlightManager : public FThreadedManager {
     private:
 
         // Current motor values from PID controller
+		//当前马达值:  pid   (马达: 即4个飞行轴马达)
         double * _motorvals = NULL; 
         
         // For computing deltaT
@@ -25,11 +26,11 @@ class FFlightManager : public FThreadedManager {
 
         /**
          * Flight-control method running repeatedly on its own thread.  
-         * Override this method to implement your own flight controller.
+         * Override this method to implement your own flight controller.: 重写这个方法,实现飞行控制
          *
-         * @param time current time in seconds (input)
-         * @param state vehicle state (input)
-         * @param motorvals motor values returned by your controller (output)
+         * @param time current time in seconds (input):  输入, 当前时间
+         * @param state vehicle state (input)  : 输入,当前状态
+         * @param motorvals motor values returned by your controller (output): 输出马达的值
          *
          */
         virtual void getMotors(const double time, const MultirotorDynamics::state_t & state, double * motorvals)  = 0;
@@ -42,17 +43,18 @@ class FFlightManager : public FThreadedManager {
 
         MultirotorDynamics::state_t _state = {};
 
-        // Constructor, called main thread
+        // Constructor, called main thread:  父类中,在构造函数 中创建了线程
         FFlightManager(MultirotorDynamics * dynamics) 
             : FThreadedManager()
         {
             // Allocate array for motor values
+			//马达数量:
             _motorvals = new double[dynamics->motorCount()]();
 
             // Store dynamics for performTask()
             _dynamics = dynamics;
 
-            // Constant
+            // Constant: 马达数量
             _motorCount = dynamics->motorCount();
 
             // For periodic update
@@ -62,17 +64,21 @@ class FFlightManager : public FThreadedManager {
         }
 
         // Called repeatedly on worker thread to compute dynamics and run flight controller (PID)
+		//用pid: 计算飞行控制
         void performTask(double currentTime)
         {
             if (!_running) return;
 
             // Compute time deltay in seconds
+			//这一帧-上一帧时间:  即deltaTime
 			double dt = currentTime - _previousTime;
 
             // Send current motor values and time delay to dynamics
+			//发送当前发动机: 值,时间
             _dynamics->setMotors(_motorvals, dt);
 
             // Update dynamics
+			//更新:
             _dynamics->update(dt);
 
             // Get new vehicle state

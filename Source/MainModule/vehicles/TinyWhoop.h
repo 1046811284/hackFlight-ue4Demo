@@ -34,6 +34,7 @@ class TinyWhoop {
 
     private:
 
+		//使用的是:  大疆phantom-4型号的:参数
         MultirotorDynamics::Parameters params = MultirotorDynamics::Parameters(
 
                 // Estimated
@@ -41,15 +42,19 @@ class TinyWhoop {
                 2.E-06, // d
 
                 // https://www.dji.com/phantom-4/info
-                1.380,  // m (kg)
-                0.350,  // l (meters)
+                1.380,  // m (kg)  重量
+                0.350,  // l (meters) 轴距
 
+			//转动惯量，又称惯性距（俗称惯性力矩，易与力矩混淆），通常以Ix、Iy、Iz表示，单位为 kg * m ^ 2，
+			//可说是一个物体对于旋转运动的惯性。
+			//对于一个质点，I = mr ^ 2，其中 m 是其质量，r 是质点和转轴的垂直距离。
                 // Estimated
-                2,      // Ix
+				//应用垂直轴定理, Ix＋Iy＋Iz＝2*(m×R ^ 2)
+                2,      // Ix   
                 2,      // Iy
                 3,      // Iz
-                38E-04, // Jr
-                15000); // maxrpm
+                38E-04, // Jr  
+                15000); // maxrpm  转速
 
     public:
 

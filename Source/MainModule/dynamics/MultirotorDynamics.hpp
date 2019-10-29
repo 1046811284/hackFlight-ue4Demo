@@ -35,6 +35,8 @@
 
 #include "../Utils.hpp"
 
+
+//管理: 飞行器力学:
 class MultirotorDynamics {
 
 public:
@@ -42,6 +44,11 @@ public:
 	/**
 	 * Position map for state vector
 	 */
+	//专业名词:
+		//Pitch 升降 绕X轴  对应常见Φ(phi)角：
+		//Yaw 偏航 绕Y轴 对应常见θ(theta)角：
+		//Roll 翻滚 绕Z轴 对应常见φ(psi)角: 
+	//_DOT:  表示加速度
 	enum {
 		STATE_X,
 		STATE_X_DOT,
@@ -49,8 +56,8 @@ public:
 		STATE_Y_DOT,
 		STATE_Z,
 		STATE_Z_DOT,
-		STATE_PHI,
-		STATE_PHI_DOT,
+		STATE_PHI,	//pitch
+		STATE_PHI_DOT,  //pitch旋转的加速度!
 		STATE_THETA,
 		STATE_THETA_DOT,
 		STATE_PSI,
@@ -59,6 +66,7 @@ public:
 
 	/**
 	 * Class for parameters from the table below Equation 3
+	 * 参数类: 用于下面的 方程式3
 	 */
 	class Parameters {
 
@@ -75,6 +83,7 @@ public:
 		double Iz;
 		double Jr;
 
+		//最大转速:(RPM,每分钟转速)
 		uint16_t maxrpm;
 
 		Parameters(double b, double d, double m, double l, double Ix, double Iy, double Iz, double Jr, uint16_t maxrpm)
@@ -104,14 +113,14 @@ public:
 
 	} pose_t;
 
-	// Dynamics
+	// Dynamics:  动力学
 	typedef struct {
-
-		double angularVel[3];
-		double bodyAccel[3];
-		double inertialVel[3];
-		double quaternion[4];
-
+		
+		double angularVel[3];//角速度
+		double bodyAccel[3];//加速度
+		double inertialVel[3];//惯性速度
+		double quaternion[4];//四元数
+		//位置旋转
 		pose_t pose;
 
 	} state_t;
@@ -122,12 +131,15 @@ private:
 	state_t _state = {};
 
 	// Flag for whether we're airborne and can update dynamics
+	//是否是: 空降 (可以动态设置)
 	bool _airborne = false;
 
 	// Inertial-frame acceleration
+	//帧间隔的(惯性):  加速度
 	double _inertialAccel[3] = {};
 
 	// y = Ax + b helper for frame-of-reference conversion methods
+	//点乘实现:  y[3] =  A[3][3] * x[3];
 	static void dot(double A[3][3], double x[3], double y[3])
 	{
 		for (uint8_t j = 0; j < 3; ++j) {
@@ -139,11 +151,12 @@ private:
 	}
 
 	// bodyToInertial method optimized for body X=Y=0
+	//根据bodyZ 和   rotation[3]:  计算惯性 inertial[3]
 	static void bodyZToInertial(double bodyZ, const double rotation[3], double inertial[3])
 	{
-		double phi = rotation[0];
-		double theta = rotation[1];
-		double psi = rotation[2];
+		double phi = rotation[0]; //ptich
+		double theta = rotation[1];//yaw
+		double psi = rotation[2];//roll
 
 		double cph = cos(phi);
 		double sph = sin(phi);
@@ -156,18 +169,21 @@ private:
 		double R[3] = { sph * sps + cph * cps * sth,
 			cph * sps * sth - cps * sph,
 			cph * cth };
-
+		//计算惯性:  inertial[3]
 		for (uint8_t i = 0; i < 3; ++i) {
 			inertial[i] = bodyZ * R[i];
 		}
 	}
 
 	// Height above ground, set by kinematics
+	//离地面的高度: 
 	double _agl = 0;
 
 protected:
 
+//===============================> 理解这一块定义的所有数据:  很重要, 方便理解后面的函数
 	// universal constants
+	//g=9.8 (物理)
 	static constexpr double g = 9.80665; // might want to allow this to vary!
 
 	// state vector (see Eqn. 11) and its first temporal derivative
@@ -175,21 +191,19 @@ protected:
 	double _dxdt[12] = {};
 
 	// Values computed in Equation 6
-	double _U1 = 0;     // total thrust
-	double _U2 = 0;     // roll thrust right
-	double _U3 = 0;     // pitch thrust forward
-	double _U4 = 0;     // yaw thrust clockwise
-	double _Omega = 0;  // torque clockwise
+	double _U1 = 0;     // total thrust     总推力  (应该是: 上升的推力)
+	double _U2 = 0;     // roll thrust right  roll推力 (向右)
+	double _U3 = 0;     // pitch thrust forward  pitch推力 (向前)
+	double _U4 = 0;     // yaw thrust clockwise  yaw推力
+	double _Omega = 0;  // torque clockwise  力矩(顺时针-旋转)
 
 	// parameter block
 	Parameters* _p = NULL;
-
+ //roll-pitch-yaw:
 	// roll right
 	virtual double u2(double* o) = 0;
-
 	// pitch forward
 	virtual double u3(double* o) = 0;
-
 	// yaw cw
 	virtual double u4(double* o) = 0;
 
@@ -197,9 +211,8 @@ protected:
 	double* _omegas = NULL;
 	double* _omegas2 = NULL;
 
-	// quad, hexa, octo, etc.
+	// quad, hexa, octo, etc.:  扇叶数量, 4/6/8等 ==> 无人机一般为4
 	uint8_t _motorCount = 0;
-
 
 
 	/**
@@ -218,22 +231,26 @@ protected:
 		}
 	}
 
+	//更新平衡环:
 	virtual void updateGimbalDynamics(double dt) {}
 
 	/**
 	 * Implements Equation 12 computing temporal first derivative of state.
-	 * Should fill _dxdx[0..11] with appropriate values.
+	 * Should fill _dxdx[0..11] with appropriate values.: 
 	 * @param accelNED acceleration in NED inertial frame
 	 * @param netz accelNED[2] with gravitational constant added in
-	 * @param phidot rotational acceleration in roll axis
+	 * @param phidot rotational acceleration in roll axis  
 	 * @param thedot rotational acceleration in pitch axis
 	 * @param psidot rotational acceleration in yaw axis
 	 */
+	//accelNED: 惯性加速度:
+	//描述:  把_dxdt[0]到_dxdt[11]填满合适的值
+	//计算: Derivative(微分)==>PID中的D??
 	virtual void computeStateDerivative(double accelNED[3], double netz)
 	{
-		double phidot = _x[STATE_PHI_DOT];
-		double thedot = _x[STATE_THETA_DOT];
-		double psidot = _x[STATE_PSI_DOT];
+		double phidot = _x[STATE_PHI_DOT];//pitch的加速度
+		double thedot = _x[STATE_THETA_DOT];//yaw的加速度
+		double psidot = _x[STATE_PSI_DOT];//roll的加速度
 
 		_dxdt[0] = _x[STATE_X_DOT];                                                              // x'
 		_dxdt[1] = accelNED[0];                                                                  // x''
@@ -254,8 +271,10 @@ protected:
 	 * @param motorval motor value in [0,1]
 	 * @return motor speed in rad/s
 	 */
+	//根据扇叶的转速[0,1]==>: 计算速度
 	virtual double computeMotorSpeed(double motorval)
 	{
+		//转速*pi/30
 		return motorval * _p->maxrpm * 3.14159 / 30;
 	}
 
@@ -276,13 +295,16 @@ public:
 	 * @param rotation initial rotation
 	 * @param airborne allows us to start on the ground (default) or in the air (e.g., gravity test)
 	 */
+	//初始化: 旋转 和  是否在空中开始(默认false)
 	void init(double rotation[3], bool airborne = false)
 	{
 		// Always start at location (0,0,0)
+		//init位置: 在000
 		_x[STATE_X] = 0;
 		_x[STATE_Y] = 0;
 		_x[STATE_Z] = 0;
 
+		//init旋转
 		_x[STATE_PHI] = rotation[0];
 		_x[STATE_THETA] = rotation[1];
 		_x[STATE_PSI] = rotation[2];
@@ -297,6 +319,11 @@ public:
 		_x[STATE_PSI_DOT] = 0;
 
 		// Initialize inertial frame acceleration in NED coordinates
+		//NED坐标系各轴的定义：
+		//	N——北轴指向地球北；
+		//	E——东轴指向地球东；
+		//	D——地轴垂直于地球表面并指向下。
+		//初始化参数: _inertialAccel  (即: 惯性加速度)
 		bodyZToInertial(-g, rotation, _inertialAccel);
 
 		// We usuall start on ground, but can start in air for testing
@@ -308,11 +335,15 @@ public:
 	 *
 	 * @param dt time in seconds since previous update
 	 */
+	//update:  更新飞行的状态: 
 	void update(double dt)
 	{
 		// Use the current Euler angles to rotate the orthogonal thrust vector into the inertial frame.
 		// Negate to use NED.
+		//欧拉角:  取roll-pitch-yaw
 		double euler[3] = { _x[6], _x[8], _x[10] };
+		
+		//初始化accelNED:
 		double accelNED[3] = {};
 		bodyZToInertial(-_U1 / _p->m, euler, accelNED);
 

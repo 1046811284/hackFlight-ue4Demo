@@ -33,6 +33,7 @@ static void getAxes5(float axes[6], uint8_t & naxes, DWORD axis0, DWORD axis1, D
 }
 
 #include <stdio.h>
+#include "../../../../../../../Program Files/Epic Games/UE_4.23/Engine/Source/Runtime/Engine/Classes/Engine/Engine.h"
 // XXX Should use a separate calibration program
 static void adjustAxesInterlink(float * axes)
 {
@@ -52,6 +53,7 @@ Joystick::Joystick(const char * devname)
 
     // Grab the first available joystick
     for (_joystickId=0; _joystickId<16; _joystickId++)
+		//windowsAPI:  获取手柄设备的型号
         if (joyGetDevCaps(_joystickId, &joycaps, sizeof(joycaps)) == JOYERR_NOERROR)
             break;
 
@@ -84,14 +86,21 @@ static void getAuxInterlink(float * axes, uint8_t buttons, uint8_t aux1, uint8_t
 
 Joystick::error_t Joystick::pollProduct(float axes[6], uint8_t & buttons)
 {
+	//摇杆:
     JOYINFOEX joyState;
     joyState.dwSize=sizeof(joyState);
     joyState.dwFlags=JOY_RETURNALL | JOY_RETURNPOVCTS | JOY_RETURNCENTERED | JOY_USEDEADZONE;
+	//windows的API: 获取手柄状态joyState
     joyGetPosEx(_joystickId, &joyState);
 
-    // axes: 0=Thr 1=Ael 2=Ele 3=Rud 4=Aux
-
+    // axes(轴): 0=Thr 1=Ael 2=Ele 3=Rud 4=Aux
     uint8_t naxes = 4;
+
+	//没有获取到产品id: 报错, 没有检测到手柄
+	if (_productId < 0)
+	{
+		return ERROR_MISSING;
+	}
 
     switch (_productId) {
 
@@ -127,20 +136,31 @@ Joystick::error_t Joystick::pollProduct(float axes[6], uint8_t & buttons)
 			getAuxInterlink(axes, (uint8_t)joyState.dwButtons, AX_AU1, AX_AU2, AUX1_MID);
             break;
 
+		//找不到这个产品id: (可能产品id发生了变化)===> 采取默认这个获取:
         default:
-
-            return _productId ? ERROR_PRODUCT : ERROR_MISSING;
+			//把4个状态:  joyState.dwYpos, joyState.dwUpos, joyState.dwRpos, joyState.dwXpos ==> 放到axes数组中
+			getAxes4(axes, joyState.dwYpos, joyState.dwUpos, joyState.dwRpos, joyState.dwXpos);
+            //return _productId ? ERROR_PRODUCT : ERROR_MISSING;
+			//if (GEngine)
+			//{
+			//	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Yellow, FString::Printf(TEXT("axes = %f, joyState.dwYpos = %d, \
+			//		joyState.dwUpos = %d, joyState.dwRpos = %d, joyState.dwXpos = %d "), \
+			//		axes, joyState.dwYpos, joyState.dwUpos, joyState.dwRpos, joyState.dwXpos));
+			//}
+			break;
     }
 
-    // Normalize the axes to demands to [-1,+1]
+    // Normalize the axes to demands to [-1,+1]: 单位化到 [-1,+1]
     for (uint8_t k=0; k<naxes; ++k) {
         axes[k] = axes[k] / 32767 - 1;
     }
 
+	//INTERLINK的手柄:
     if (_productId == PRODUCT_INTERLINK) {
         adjustAxesInterlink(axes);
     }
 
+	//按钮状态:
     buttons = (uint8_t)joyState.dwButtons;
 
 	return Joystick::ERROR_NOERROR;

@@ -19,7 +19,7 @@
 class Joystick {
 
 private:
-
+	//各种手柄的id:  有误,等待修正!!!
 	static const uint16_t PRODUCT_PS3_CLONE        = 0x0003;
 	static const uint16_t PRODUCT_XBOX360          = 0x02a1;
 	static const uint16_t PRODUCT_XBOX360_CLONE2   = 0x028e;
@@ -63,6 +63,7 @@ protected:
         AX_NIL
     };
 
+	//把button状态:  设置到axes的[5][6]两个位置
     void buttonsToAxes(uint8_t buttons, uint8_t top, uint8_t rgt, uint8_t bot, uint8_t lft, float * axes)
     {
         static float _aux1 = 0;
@@ -96,18 +97,22 @@ protected:
         axes[AX_AU2] = _aux2;
     }
 
+	//获取手柄状态: ==> 保存到buttons(按钮状态) 和axes (轴状态)
     error_t pollProduct(float axes[6], uint8_t & buttons);
 
 public:
 
     MAINMODULE_API Joystick(const char * devname = "/dev/input/js0"); // ignored by Windows
-
+	
+	//把手柄状态:  设置到axes[6]中
     MAINMODULE_API error_t poll(float axes[6])
     {
         uint8_t buttons = 0;
 
+		//获取手柄状态: 到axes, buttons变量中
         error_t status = pollProduct(axes, buttons);
 
+		//picth轴和油门:  通过axes获取
         // Invert throttle, pitch axes on game controllers
         if (_isGameController) {
             axes[AX_THR] *= -1;
@@ -123,6 +128,10 @@ public:
             case PRODUCT_XBOX360:
 			case PRODUCT_XBOX360_CLONE2:
                 buttonsToAxes(buttons, 8, 2, 1, 4, axes);
+				//无法识别手柄: 按照360手柄处理
+			default:
+				//吧button状态:  设置到axes的[5][6]两个位置
+				buttonsToAxes(buttons, 8, 2, 1, 4, axes);
         }
 
         return status;
