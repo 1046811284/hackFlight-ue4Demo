@@ -42,6 +42,7 @@
     };                                                                     \
     static structname objname;
 
+
 class Vehicle {
 
     private:
@@ -49,9 +50,11 @@ class Vehicle {
         ACameraActor* _groundCamera = NULL;
 
         // Useful approximation to infinity for tracing rays
-        static constexpr float INF = 1e9;
+		//无穷大的,追踪射线
+        static constexpr float INF = 1e9;//1e9无穷大
 
         // Time during which velocity will be set to zero during final phase oflanding
+		//最后阶段, 吧速度设置为0
         static constexpr float SETTLING_TIME = 1.0;
 
         // UE4 objects that must be built statically
@@ -65,13 +68,13 @@ class Vehicle {
         UCameraComponent* _playerCamera = NULL;
 
         // Support for switching from chase camera to FPV
-        float _playerCameraFollowMeters = 0;
-        float _playerCameraElevationMeters = 0;
+        float _playerCameraFollowMeters = 0; //跟随相机的高度
+        float _playerCameraElevationMeters = 0;//...相机的高度
 
         // PlayerController for getting keyboard events
         APlayerController * _playerController = NULL;
 
-        // Cameras
+        // Cameras: 定义相机类,到pawn中
         Camera* _cameras[Camera::MAX_CAMERAS];
         uint8_t  _cameraCount;
 
@@ -101,30 +104,38 @@ class Vehicle {
         FVector _startLocation = {};
 
         // Retrieves kinematics from dynamics computed in another thread, returning true if vehicle is airborne, false otherwise.
+		//更新姿态:  通过_dynamics:  计算运动姿势
         void updateKinematics(void)
         {
             // Get vehicle pose from dynamics
+			//获取姿态:
             MultirotorDynamics::pose_t pose = _dynamics->getPose();
 
             // Set vehicle pose in animation
+			//设置姿态:  位置 + 旋转
             _pawn->SetActorLocation(_startLocation +
                 FVector(pose.location[0], pose.location[1], -pose.location[2]) * 100);  // NED => ENU
             _pawn->SetActorRotation(FMath::RadiansToDegrees(FRotator(pose.rotation[1], pose.rotation[2], pose.rotation[0])));
         }
 
+		//螺旋桨动画 和 声音设置:
         void animatePropellers(void)
         {
             // Get motor values from dynamics
+			//吧螺旋桨的值:  写入_motorvals
             _flightManager->getMotorValues(_motorvals);
 
             // Compute the sum of the motor values
+			//求和:
             float motorsum = 0;
             for (uint8_t j = 0; j < _dynamics->motorCount(); ++j) {
                 motorsum += _motorvals[j];
             }
 
             // Rotate props. For visual effect, we can ignore actual motor values, and just keep increasing the rotation.
+			//更新每个旋翼的旋转角度:  (for 世界效果)
             if (motorsum > 0) {
+				//参数1: 旋转方向 (顺时针/逆时针)   参数2: 旋翼数量
                 rotateProps(_motorDirections, _dynamics->motorCount());
             }
 
@@ -133,6 +144,7 @@ class Vehicle {
             (*_motorBuffer)[_bufferIndex] = motorsum / _dynamics->motorCount();
 
             // Compute the mean motor value over the buffer frames
+			//计算平均值:  旋翼多帧之间的
             float smoothedMotorMean = 0;
             for (uint8_t i = 0; i < _motorBuffer->Capacity(); ++i) {
                 smoothedMotorMean += (*_motorBuffer)[i];
@@ -140,10 +152,12 @@ class Vehicle {
             smoothedMotorMean /= _motorBuffer->Capacity();
 
             // Use the mean motor value to modulate the pitch and voume of the propeller sound
+			//更新声音大小:
             _audioComponent->SetFloatParameter(FName("pitch"), smoothedMotorMean);
             _audioComponent->SetFloatParameter(FName("volume"), smoothedMotorMean);
         }
 
+		//遍历获取相机的image:   ==> 可以替换为ue4的 RenderTarget处理否!??
         void grabImages(void)
         {
             for (uint8_t i = 0; i < _cameraCount; ++i) {
@@ -151,8 +165,10 @@ class Vehicle {
             }
         }
 
+		//创建相机和弹簧臂:
         void buildPlayerCameras(float distanceMeters, float elevationMeters)
         {
+			//初始化弹簧臂:
             _bodyHorizontalSpringArm = _pawn->CreateDefaultSubobject<USpringArmComponent>(TEXT("BodyHorizontalSpringArm"));
             _bodyHorizontalSpringArm->SetupAttachment(_frameMeshComponent);
             _bodyHorizontalSpringArm->SetRelativeLocationAndRotation(FVector::ZeroVector, FRotator::ZeroRotator);
@@ -175,10 +191,12 @@ class Vehicle {
             _playerCameraSpringArm->bInheritRoll = false;
             _playerCameraSpringArm->bEnableCameraRotationLag = true;
 
+			//初始化相机:
             _playerCamera = _pawn->CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
             _playerCamera->SetupAttachment(_playerCameraSpringArm, USpringArmComponent::SocketName);
         }
 
+		//跟随相机模式:
         void playerCameraSetChaseView()
         {
             _playerController->SetViewTargetWithBlend(_pawn);
@@ -189,6 +207,7 @@ class Vehicle {
             _bodyHorizontalSpringArm->bInheritYaw = false ;
         }
 
+		//前向相机模式:
         void playerCameraSetFrontView()
         {
             _playerController->SetViewTargetWithBlend(_pawn);
@@ -198,6 +217,7 @@ class Vehicle {
             _bodyHorizontalSpringArm->bInheritYaw = true;
         }
 
+		//地面相机模式:
         void playerCameraSetGroundView()
         {
             if (_groundCamera) _playerController->SetViewTargetWithBlend(_groundCamera);
@@ -210,12 +230,16 @@ class Vehicle {
             return FMath::RadiansToDegrees(3.14159 / 2 - theta) + 57.5;
         }
 
+		//更新每个旋翼的旋转角度
         void rotateProps(int8_t* motorDirections, uint8_t motorCount)
         {
+			//静态变量:  每次调用转 motorDirections[i] * 200
             static float rotation;
             for (uint8_t i = 0; i < motorCount; ++i) {
+				//i旋翼,   设置角度为  rotation * motorDirections[i] * 200
                 setPropRotation(i, rotation * motorDirections[i] * 200);
             }
+			//+1, 方便下次调用
             rotation++;
         }
 
@@ -235,6 +259,7 @@ class Vehicle {
 
     public:
 
+		//_frameMeshComponent:  飞行器Mesh设置:
         void build(APawn* pawn, UStaticMesh* frameMesh)
         {
             _pawn = pawn;
@@ -249,14 +274,16 @@ class Vehicle {
             _propCount = 0;
         }
 
+		//飞行器上的:  声音+ 相机/弹簧臂
         void buildFull(APawn* pawn, UStaticMesh* frameMesh, float chaseCameraDistanceMeters, float chaseCameraElevationMeters)
         {
             build(pawn, frameMesh);
 
-            // Build the player-view cameras
+            // Build the player-view cameras: 相机/弹簧臂
             buildPlayerCameras(chaseCameraDistanceMeters, chaseCameraElevationMeters);
 
             // Get sound cue from Contents
+			//声音组件:
             static ConstructorHelpers::FObjectFinder<USoundCue> soundCue(TEXT("/Game/Flying/Audio/MotorSoundCue"));
 
             // Store a reference to the Cue asset - we'll need it later.
@@ -270,13 +297,15 @@ class Vehicle {
 
             // Attach the sound to the pawn's root, the sound follows the pawn around
             _audioComponent->SetupAttachment(_pawn->GetRootComponent());
-            
+    
+			//平衡环相机:
             // Create a spring-arm for the gimbal
             _gimbalSpringArm = _pawn->CreateDefaultSubobject<USpringArmComponent>(TEXT("GimbalSpringArm"));
             _gimbalSpringArm->SetupAttachment(_pawn->GetRootComponent());
             _gimbalSpringArm->TargetArmLength = 0.f;
         }
 
+		//添加其他Mesh:  子类中调用, 添加其他配件Mesh (螺旋桨等)
         void addMesh(UStaticMesh* mesh, const char* name, const FVector& location, const FRotator rotation, const FVector& scale)
         {
             UStaticMeshComponent* meshComponent =
@@ -299,6 +328,7 @@ class Vehicle {
         }
 
         // z is set in editor
+		//设置Mesh的: 相对位置/旋转
         UStaticMeshComponent * addProp(UStaticMesh* propMesh, float x, float y, float angle)
         {
             UStaticMeshComponent* propMeshComponent =
@@ -317,11 +347,13 @@ class Vehicle {
             addProp(propMesh, x, y, propStartAngle(x,y));
         }
 
+		//设置Mesh的: 相对旋转
         virtual void setPropRotation(uint8_t index, float angle)
         {
             _propellerMeshComponents[index]->SetRelativeRotation(FRotator(0, angle, 0));
         }
 
+		//添加相机到弹簧臂:
         void addCamera(Camera* camera)
         {
             // Add camera to spring arm
@@ -363,6 +395,7 @@ class Vehicle {
             _playerController->SetViewTargetWithBlend(_pawn);
 
             // Make sure a map has been selected
+			//是否选地图:
             _mapSelected = false;
             if (_pawn->GetWorld()->GetMapName().Contains("Untitled")) {
                 error("NO MAP SELECTED");
@@ -371,23 +404,28 @@ class Vehicle {
             _mapSelected = true;
 
             // Disable built-in physics
+			//关闭物理:
             _frameMeshComponent->SetSimulatePhysics(false);
 
             // Start the audio for the propellers Note that because the
             // Cue Asset is set to loop the sound, once we start playing the sound, it
             // will play continiously...
+			//播放:  这个声音cue本身是循环的 (cue内部,设置了音量参数)
             _audioComponent->Play();
 
             // Create circular queue for moving-average of motor values
             _motorBuffer = new TCircularBuffer<float>(20);
 
             // Get vehicle ground-truth location for kinematic offset
+			//获取初始飞行位置: 用于地面相机切换位置
             _startLocation = _pawn->GetActorLocation();
 
             // AGL offset will be set to a positve value the first time agl() is called
+			//角度偏移
             _aglOffset = 0;
 
             // Get vehicle ground-truth rotation to initialize flight manager
+			//起飞时,地面的初始旋转:
             FRotator startRotation = _pawn->GetActorRotation();
 
             // Initialize dynamics with initial rotation
@@ -395,42 +433,55 @@ class Vehicle {
                 FMath::DegreesToRadians(startRotation.Roll),
                 FMath::DegreesToRadians(startRotation.Pitch),
                 FMath::DegreesToRadians(startRotation.Yaw) };
+			//初始化: _dynamics
             _dynamics->init(rotation);
 
             // Find the first cine camera in the viewport
             _groundCamera = NULL;
+			//遍历pawn身上的: camera
             for (TActorIterator<ACameraActor> cameraItr(_pawn->GetWorld()); cameraItr; ++cameraItr) {
 
+				//如果是CineCamera:
                 ACameraActor * cameraActor = *cameraItr;
                 if (cameraActor->GetName().StartsWith("CineCamera")) {
+					//设置为地面camera
                     _groundCamera = cameraActor;
                 }
             }
 
+			//相机设置为: 追赶Chase模式
             playerCameraSetChaseView();
         }
 
         void Tick(float DeltaSeconds)
         {
             // Quit on ESCape key
+			//按esc按键:  那么退出
             if (hitKey(EKeys::Escape)) GIsRequestingExit = true;
 
             // Run the game if a map has been selected
+			//如果选择了地图:
             if (_mapSelected) {
 
                 // Use 1/2 keys to switch player-camera view
+				//检测按键输入: 切换视角
                 setPlayerCameraView();
 
+				//更新: 飞行姿态 ==> 通过_dynamics计算,物理学
                 updateKinematics();
 
+				//遍历获取相机的image:   ==> 可以替换为ue4的 RenderTarget处理否!??
                 grabImages();
 
+				//更新螺旋桨动画 和 旋转声音大小:
                 animatePropellers();
 
+				//_dynamics:  更新_dynamics的 AGL (离地高度)
                 _dynamics->setAgl(agl());
             }
         }
 
+		//更新相机模式3个:
         void setPlayerCameraView(void)
         {
             if (_groundCamera) {
@@ -438,60 +489,74 @@ class Vehicle {
                         UKismetMathLibrary::FindLookAtRotation(_groundCamera->GetActorLocation(), _pawn->GetActorLocation()));
             }
 
-            if (hitKey(EKeys::One)   || hitKey(EKeys::NumPadOne))   playerCameraSetFrontView();
-            if (hitKey(EKeys::Two)   || hitKey(EKeys::NumPadTwo))   playerCameraSetChaseView();
-            if (hitKey(EKeys::Three) || hitKey(EKeys::NumPadThree)) playerCameraSetGroundView();
+            if (hitKey(EKeys::One)   || hitKey(EKeys::NumPadOne))   playerCameraSetFrontView();//向前视角
+            if (hitKey(EKeys::Two)   || hitKey(EKeys::NumPadTwo))   playerCameraSetChaseView();//跟随视角
+            if (hitKey(EKeys::Three) || hitKey(EKeys::NumPadThree)) playerCameraSetGroundView();//地面视角
         }
 
+		//是否按下某个键
         bool hitKey(const FKey key)
         {
             return _playerController->IsInputKeyDown(key);
         }
 
         // Returns AGL when vehicle is level above ground, "infinity" otherwise
+		//返回飞行器的:  当飞行器飞离地面时==>返回: AGL (地面高度(AGL))
+			//(AGL: 超声波高度计, 可以获得离地面的高度)==> 传感器==> 这里直接用射线获取
         float agl(void)
         {
             // Start at the center of the vehicle
+			//中心位置:  当前位置,为射线起始位置
             FVector startPoint = _pawn->GetActorLocation();
             startPoint.Z += 100;
-            // End at a point an "infinite" distance below the start point
+            // End at a point an "infinite" distance below the start point: 
+			//endpoint在startPoint无穷向下方:  向下发送射线
             FVector endPoint = FVector(startPoint.X, startPoint.Y, startPoint.Z - INF);
 
             //drawHorizontal(startPoint);
             //drawLine(startPoint, endPoint);
 
+			//startPoint, endPoint 两个点之间产生射线:  hit到物体以后, 返回飞行器和hit点的距离
             float d = getImpactDistance(startPoint, endPoint);
 
             // The first time we measure, we need to set the offset
+			//第一次时我们需要:  测量偏移高度!!(如:  飞行器中心点, 到地面的offset) offset 
             if (_aglOffset == 0) {
                 _aglOffset = d;
             }
 
+			//返回:  hit距离 - 
             return d - _aglOffset;
         }
 
         // Returns distance to mesh between points, or -1 if none found.
         // Eventually we may want to be able to specifiy an actor or actors to include or exclude
         // (other than the vehicle itself).
+		//startPoint, endPoint 两个点之间产生射线:  hit到物体以后, 返回距离
         float getImpactDistance(FVector startPoint, FVector endPoint)
         {
             // Currently, the only collisions we ignore are with the pawn itself
             TArray<AActor*> actorsToIgnore;
+			//不hit自己:
             actorsToIgnore.Add(_pawn);
             FCollisionQueryParams traceParams(FName(TEXT("Distance Trace")), true, actorsToIgnore[0]);
             traceParams.AddIgnoredActors(actorsToIgnore);
 
             FHitResult OutHit;
+			//两个点之间, 发送射线:
             if (_pawn->GetWorld()->LineTraceSingleByChannel(OutHit, startPoint, endPoint, ECC_Visibility, traceParams)) {
+				//如果射线hit到东西:
                 if (OutHit.bBlockingHit) {
                     FVector impactPoint = OutHit.ImpactPoint;
+					//返回开始点, 到hit点,之间的距离:
                     return (startPoint.Z - impactPoint.Z) / 100;
                 }
             }
-
+			//没有hit返回-1;
             return -1;
         }
 
+		//画一条水平线:  drawLine
         void drawHorizontal(FVector point)
         {
             FVector lftPoint = FVector(point.X, point.Y - 100, point.Z);
@@ -507,15 +572,20 @@ class Vehicle {
         void PostInitializeComponents()
         {
             // Add "Vehicle" tag for use by level blueprint
+			//添加 "Vehicle" tag,  ==> 用于关卡蓝图:??
             _pawn->Tags.Add(FName("Vehicle"));
 
+			//设置声音
             if (_soundCue->IsValidLowLevelFast()) {
                 _audioComponent->SetSound(_soundCue);
             }
         }
 
+		//设置平衡环的旋转
+			//平衡环:  当飞行器旋转或者倾斜时:  相机保持水平不抖动
         void rotateGimbal(FQuat rotation)
         {
+			//设置相机的旋转, 让其保持水平==>就达到了,平衡环效果
             _gimbalSpringArm->SetRelativeRotation(rotation);
         }
 

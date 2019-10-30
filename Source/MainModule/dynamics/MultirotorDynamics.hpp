@@ -201,7 +201,8 @@ protected:
 
 	// parameter block
 	Parameters* _p = NULL;
- //roll-pitch-yaw:
+ //roll-pitch-yaw:  (这3个函数, 在子类有实现)
+		////u2/u3/u4: 子类中实现==> 返回roll/pitch/yaw的力???
 	// roll right
 	virtual double u2(double* o) = 0;
 	// pitch forward
@@ -210,7 +211,9 @@ protected:
 	virtual double u4(double* o) = 0;
 
 	// radians per second for each motor, and their squared values
+	//旋翼转速:  每秒多少度:   ==>数组, 4个旋翼
 	double* _omegas = NULL;
+	//旋翼转速:  每秒多少度的平方  ==> 数组
 	double* _omegas2 = NULL;
 
 	// quad, hexa, octo, etc.:  扇叶数量, 4/6/8等 ==> 无人机一般为4
@@ -219,6 +222,7 @@ protected:
 
 	/**
 	 *  Constructor
+	 * 构造函数:   初始化 _p = params  和 旋翼数量motorCount参数
 	 */
 	MultirotorDynamics(Parameters* params, const uint8_t motorCount)
 	{
@@ -273,7 +277,7 @@ protected:
 	 * @param motorval motor value in [0,1]
 	 * @return motor speed in rad/s
 	 */
-	//根据扇叶的转速[0,1]==>: 计算速度
+	//根据扇叶的转速[0,1]==>: 计算旋翼的转速
 	virtual double computeMotorSpeed(double motorval)
 	{
 		//转速*pi/30
@@ -445,27 +449,37 @@ public:
 	 * @param motorvals in interval [0,1]
 	 * @param dt time constant in seconds
 	 */
+	//使用函数: u2/u3/u4
+	//旋翼的推力计算:    仔细看下
 	virtual void setMotors(double* motorvals, double dt)
 	{
 		// Convert the  motor values to radians per second
 		for (unsigned int i = 0; i < _motorCount; ++i) {
+			//根据旋翼的转速:  每s, 多少度
+			//motorvals[i]:  是[0-1]的输入值==>影响(计算),当前转速
 			_omegas[i] = computeMotorSpeed(motorvals[i]); //rad/s
 		}
 
 		// Compute overall torque from omegas before squaring
+		//u4: 用于计算力矩旋转:  力矩(顺时针-旋转)
 		_Omega = u4(_omegas);
 
 		// Overall thrust is sum of squared omegas
+		//omegas的平方:  计算, 上升推力
 		_U1 = 0;
 		for (unsigned int i = 0; i < _motorCount; ++i) {
+			//平方:  每个旋翼转速的平方和
 			_omegas2[i] = _omegas[i] * _omegas[i];
+			//总推力(上升推力): 
 			_U1 += _p->b * _omegas2[i];
 		}
 
 		// Use the squared Omegas to implement the rest of Eqn. 6
+		//设置3个推力: roll推力(向右) +  pitch推力(向前  + yaw推力
+			//u2/3/4:  见子类实现
 		_U2 = _p->l * _p->b * u2(_omegas2);
 		_U3 = _p->l * _p->b * u3(_omegas2);
-		_U4 = _p->d * u4(_omegas2);
+		_U4 = _p->d * u4(_omegas2); 
 	}
 
 	/**

@@ -20,6 +20,7 @@ class QuadXAPDynamics : public MultirotorDynamics {
 
     public:	
 
+		//参数 和 旋翼数量: 4
 		QuadXAPDynamics(Parameters * params) : MultirotorDynamics(params, 4)
         {
         }
@@ -27,6 +28,8 @@ class QuadXAPDynamics : public MultirotorDynamics {
     protected:
 
         // MultirotorDynamics method overrides
+
+		//o[3]==> 0/1/2/3: 表示4个旋翼的??
 
         // roll right
         virtual double u2(double * o) override

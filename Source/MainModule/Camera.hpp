@@ -158,13 +158,16 @@ class Camera {
         void grabImage(void)
         {
             // Read the pixels from the RenderTarget
+			//从RenderTarget:  读取像素
             TArray<FColor> renderTargetPixels;
             _renderTarget->ReadPixels(renderTargetPixels);
 
             // Copy the RBGA pixels to the private image
+			//吧上面的像素, 拷贝到 _imageBytes
             FMemory::Memcpy(_imageBytes, renderTargetPixels.GetData(), _rows*_cols*4);
 
             // Virtual method implemented in subclass
+			//处理图形byte:
             processImageBytes(_imageBytes);
         }
 

@@ -19,10 +19,12 @@
 DECLARE_STATIC_MESH(FFrameStatics, "Phantom/Frame.Frame", FrameStatics)
 DECLARE_STATIC_MESH(FPropStatics, "Phantom/Prop.Prop", PropStatics)
 
+//大疆精灵: Phantom 
 class Phantom {
 
     private:
 
+		//设置大疆精灵的物理参数:
         MultirotorDynamics::Parameters params = MultirotorDynamics::Parameters(
 
                 // Estimated
@@ -41,7 +43,7 @@ class Phantom {
                 15000); // maxrpm
 
     public:
-
+		//4个旋翼:
         QuadXAPDynamics dynamics = QuadXAPDynamics(&params);
 
         Vehicle vehicle = Vehicle(&dynamics);

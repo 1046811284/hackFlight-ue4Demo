@@ -32,7 +32,8 @@ class FLIGHTMODULE_API AHackflightPhantomPawn : public APawn {
         // AActor overrides
 
         virtual void BeginPlay() override;
-
+		
+		
         virtual void Tick(float DeltaSeconds) override;
 
         virtual void PostInitializeComponents() override;
