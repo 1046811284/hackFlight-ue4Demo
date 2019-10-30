@@ -50,9 +50,9 @@ class TinyWhoop {
 			//对于一个质点，I = mr ^ 2，其中 m 是其质量，r 是质点和转轴的垂直距离。
                 // Estimated
 				//应用垂直轴定理, Ix＋Iy＋Iz＝2*(m×R ^ 2)
-                2,      // Ix   
-                2,      // Iy
-                3,      // Iz
+                2,      // Ix    X轴的转动惯量
+                2,      // Iy    Y轴的转动惯量 
+                3,      // Iz    Z轴转动惯量
                 38E-04, // Jr  
                 15000); // maxrpm  转速
 

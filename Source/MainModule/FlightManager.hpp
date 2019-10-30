@@ -44,6 +44,7 @@ class FFlightManager : public FThreadedManager {
         MultirotorDynamics::state_t _state = {};
 
         // Constructor, called main thread:  父类中,在构造函数 中创建了线程
+		//MultirotorDynamics:  包含了飞行控制算法
         FFlightManager(MultirotorDynamics * dynamics) 
             : FThreadedManager()
         {
@@ -78,7 +79,7 @@ class FFlightManager : public FThreadedManager {
             _dynamics->setMotors(_motorvals, dt);
 
             // Update dynamics
-			//更新:
+			//更新:  运动
             _dynamics->update(dt);
 
             // Get new vehicle state

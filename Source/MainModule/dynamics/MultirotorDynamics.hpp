@@ -66,7 +66,8 @@ public:
 
 	/**
 	 * Class for parameters from the table below Equation 3
-	 * 参数类: 用于下面的 方程式3
+	 * 无人机的参数: 用于下面的 方程式3
+	 * 每台无人机参数不同:    物理特性就不同
 	 */
 	class Parameters {
 
@@ -74,17 +75,16 @@ public:
 
 	public:
 
-		double b;
-		double d;
-		double m;
-		double l;
-		double Ix;
-		double Iy;
-		double Iz;
-		double Jr;
+		double b;  //???
+		double d;  //???
+		double m;  // m (kg)  重量
+		double l;  // l (meters) 轴距
+		double Ix; // Ix    X轴的转动惯量
+		double Iy; // Iy    Y轴的转动惯量 
+		double Iz; // Iz    Z轴转动惯量
+		double Jr; //
+		uint16_t maxrpm;//最大转速:(RPM,每分钟转速)
 
-		//最大转速:(RPM,每分钟转速)
-		uint16_t maxrpm;
 
 		Parameters(double b, double d, double m, double l, double Ix, double Iy, double Iz, double Jr, uint16_t maxrpm)
 		{
@@ -187,7 +187,9 @@ protected:
 	static constexpr double g = 9.80665; // might want to allow this to vary!
 
 	// state vector (see Eqn. 11) and its first temporal derivative
+	//
 	double _x[12] = {};
+	//
 	double _dxdt[12] = {};
 
 	// Values computed in Equation 6
