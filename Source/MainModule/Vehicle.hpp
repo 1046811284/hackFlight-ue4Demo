@@ -54,10 +54,11 @@ class Vehicle {
         static constexpr float INF = 1e9;//1e9无穷大
 
         // Time during which velocity will be set to zero during final phase oflanding
-		//最后阶段, 吧速度设置为0
+		//最后阶段(着陆阶段), 把速度设置为0
         static constexpr float SETTLING_TIME = 1.0;
 
         // UE4 objects that must be built statically
+		//ue4对象:  必须被静态构建  (飞机零部件)
         UStaticMesh* _frameMesh = NULL;
         UStaticMesh* _motorMesh = NULL;
         USoundCue* _soundCue = NULL;
