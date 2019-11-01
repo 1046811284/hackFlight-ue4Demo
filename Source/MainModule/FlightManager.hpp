@@ -19,7 +19,7 @@ class FFlightManager : public FThreadedManager {
 		//当前马达值:  pid   (马达: 即4个飞行轴马达)
         double * _motorvals = NULL; 
         
-        // For computing deltaT
+        // For computing deltaT:  用于计算DeltaTime
         double   _previousTime = 0;
 
         bool _running = false;

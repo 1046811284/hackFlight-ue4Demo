@@ -43,23 +43,25 @@ class Phantom {
                 15000); // maxrpm
 
     public:
-		//4个旋翼:
+		//dynamics动力学计算:   传入 params
         QuadXAPDynamics dynamics = QuadXAPDynamics(&params);
-
+		//飞行器: 传入 dynamics
         Vehicle vehicle = Vehicle(&dynamics);
 
     private:
 
         // Threaded worker for flight control
+		//开一个线程: 用于飞行控制
         FFlightManager * _flightManager = NULL;
 
     public:
-
+		//构建:  vehicle的各个Mesh
         void build(APawn * pawn)
         {
             vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.5);
 
             // Add propellers
+			//添加组件:  4个旋翼???
             addProp(+1, +1);
             addProp(-1, -1);
             addProp(+1, -1);

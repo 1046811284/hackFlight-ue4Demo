@@ -223,6 +223,7 @@ class Vehicle {
             if (_groundCamera) _playerController->SetViewTargetWithBlend(_groundCamera);
         }
 
+		//计算:  用XY计算角度==>
         float propStartAngle(float propX, float propY)
         {
             FVector vehicleCenter = _pawn->GetActorLocation();
@@ -342,6 +343,7 @@ class Vehicle {
             return propMeshComponent;
         }
 
+		//设置:  位置/旋转
         void addProp(UStaticMesh* propMesh, float x, float y)
         {
             addProp(propMesh, x, y, propStartAngle(x,y));
@@ -525,7 +527,7 @@ class Vehicle {
                 _aglOffset = d;
             }
 
-			//返回:  hit距离 - 
+			//返回:  hit距离 - 偏移高度
             return d - _aglOffset;
         }
 
