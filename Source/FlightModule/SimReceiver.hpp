@@ -25,6 +25,7 @@ class SimReceiver : public hf::Receiver {
 		static constexpr uint8_t DEFAULT_CHANNEL_MAP[6] = { 0, 1, 2, 3, 4, 5 };
 		static constexpr float DEMAND_SCALE = 1.0f;
 
+		//摇杆:
 		Joystick * _joystick;
 
 		// Helps mock up periodic availability of new data frame (output data rate; ODR)
@@ -40,7 +41,7 @@ class SimReceiver : public hf::Receiver {
 
 		uint8_t getAux2State(void)
 		{
-			// Always armed!
+			// Always armed!  一直武装?
 			return 1;
 		}
 
@@ -49,8 +50,9 @@ class SimReceiver : public hf::Receiver {
 		SimReceiver(uint16_t updateFrequency=50)
 			: Receiver(DEFAULT_CHANNEL_MAP, DEMAND_SCALE)
 		{
+			//摇杆:
 			_joystick = new Joystick();
-
+			//deltatime: 初始化为 1/50
 			_deltaT = 1./updateFrequency;
 			_previousTime = 0;
 		}
@@ -62,7 +64,8 @@ class SimReceiver : public hf::Receiver {
 		bool gotNewFrame(void)
 		{
 			// Get a high-fidelity current time value from the OS
-			double currentTime = FPlatformTime::Seconds();
+			//获取的更高精度的时间:  
+			double currentTime = FPlatformTime::Seconds();//从游戏开始,到现在的时间==> FPlatformTime::Seconds()
 
 			if (currentTime-_previousTime > _deltaT) {
 				_previousTime = currentTime;
@@ -79,7 +82,10 @@ class SimReceiver : public hf::Receiver {
 		Joystick::error_t update(void)
 		{
 			// Joystick::poll() returns zero (okay) or a postive value (error)
+			//把手柄状态:  设置到rawvals[]数组中
+				//返回0,  或 error
 			 _joystick->poll(rawvals);
+			 //强制返回0:  后续查看返回error原因!!!
 			 return Joystick::error_t::ERROR_NOERROR;
 		}
 

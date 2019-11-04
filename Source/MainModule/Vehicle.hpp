@@ -92,6 +92,7 @@ class Vehicle {
         float  _motorvals[FFlightManager::MAX_MOTORS] = {};
 
         // Circular buffer for moving average of motor values
+		//循环缓冲区:  马达移动平局值
         TCircularBuffer<float>* _motorBuffer = NULL;
         uint32_t _bufferIndex = 0;
 
@@ -109,7 +110,7 @@ class Vehicle {
         void updateKinematics(void)
         {
             // Get vehicle pose from dynamics
-			//获取姿态:
+			//获取姿态:  从_dynamics
             MultirotorDynamics::pose_t pose = _dynamics->getPose();
 
             // Set vehicle pose in animation
@@ -123,37 +124,41 @@ class Vehicle {
         void animatePropellers(void)
         {
             // Get motor values from dynamics
-			//吧螺旋桨的值:  写入_motorvals
+			//从_flightManager获取到==>螺旋桨的转速值:  ==> 写入_motorvals数组!
             _flightManager->getMotorValues(_motorvals);
 
             // Compute the sum of the motor values
-			//求和:
+			//求和:  所有螺旋桨 转速的和
             float motorsum = 0;
             for (uint8_t j = 0; j < _dynamics->motorCount(); ++j) {
                 motorsum += _motorvals[j];
             }
 
             // Rotate props. For visual effect, we can ignore actual motor values, and just keep increasing the rotation.
-			//更新每个旋翼的旋转角度:  (for 世界效果)
+			//更新每个旋翼的旋转角度:  (for 世界效果)  ==> 让旋翼看起来,在旋转
             if (motorsum > 0) {
 				//参数1: 旋转方向 (顺时针/逆时针)   参数2: 旋翼数量
                 rotateProps(_motorDirections, _dynamics->motorCount());
             }
 
             // Add mean to circular buffer for moving average
+			//得到下一个索引:
             _bufferIndex = _motorBuffer->GetNextIndex(_bufferIndex);
-            (*_motorBuffer)[_bufferIndex] = motorsum / _dynamics->motorCount();
+			//添加值到:  _motorBuffer   ==> 值为平局转速:
+            (*_motorBuffer)[_bufferIndex] = motorsum / _dynamics->motorCount();//总和/数量=>平局转速
 
             // Compute the mean motor value over the buffer frames
-			//计算平均值:  旋翼多帧之间的
+			//计算平均值: (平均转速)  
             float smoothedMotorMean = 0;
             for (uint8_t i = 0; i < _motorBuffer->Capacity(); ++i) {
+				//20个平局值的总和:
                 smoothedMotorMean += (*_motorBuffer)[i];
             }
+			//总和(20个buffer的)/数量(20)==> 得到真正的平局值
             smoothedMotorMean /= _motorBuffer->Capacity();
 
             // Use the mean motor value to modulate the pitch and voume of the propeller sound
-			//更新声音大小:
+			//根据平局值==>来更新声音大小:
             _audioComponent->SetFloatParameter(FName("pitch"), smoothedMotorMean);
             _audioComponent->SetFloatParameter(FName("volume"), smoothedMotorMean);
         }
@@ -417,7 +422,27 @@ class Vehicle {
             _audioComponent->Play();
 
             // Create circular queue for moving-average of motor values
+			//循环队列TCircularBuffer:  可以放20个float元素
+			//TCircularBuffer: 的特殊之处在于它内部存储数据的方式，内存空间不是动态增长的，而是循环使用的。
+				//可以把 circular_buffer内部想象成一个首尾相连的环，当元素数量达到容器的容量上限时将自动重用最初的空间。
+			//circular buffer可以使用assign库初始化
+					//circular_buffer<int>cb = （list_of（1），2，3）；
+					//
+					//	print（cb）；//1，2，3，此时缓冲区已满
+					//
+					//	cb.push_back（4）；//4将覆盖最开始的1， ==> 指针,指向2
+					//
+					//	print（cb）；//2，3，4，begin（）从2开始  ==> 指针指向2
+					//
+					//	cb.push_back（5）；//5将覆盖最开始的2，
+					//
+					//	print（cb）；//3，4，5，begin（）从3开始
+					//
+					//	cb.pop_front（）；//弹出最开始的3
+					//
+					//	print（cb）；//4，5，现在circular_buffer只有两个元素
             _motorBuffer = new TCircularBuffer<float>(20);
+
 
             // Get vehicle ground-truth location for kinematic offset
 			//获取初始飞行位置: 用于地面相机切换位置

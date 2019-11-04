@@ -43,7 +43,6 @@ private:
 public:
 
     typedef enum {
-
         ERROR_NOERROR,
         ERROR_MISSING,
         ERROR_PRODUCT
@@ -130,7 +129,7 @@ public:
                 buttonsToAxes(buttons, 8, 2, 1, 4, axes);
 				//无法识别手柄: 按照360手柄处理
 			default:
-				//吧button状态:  设置到axes的[5][6]两个位置
+				//把button状态:  设置到axes的[5][6]两个位置
 				buttonsToAxes(buttons, 8, 2, 1, 4, axes);
         }
 

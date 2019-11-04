@@ -114,6 +114,7 @@ namespace hf {
             float headless = false;
 
             // Raw receiver values in [-1,+1]
+			//-1到1:的输入值  8个输入元素
             float rawvals[MAXCHAN] = {0};  
 
             demands_t demands;

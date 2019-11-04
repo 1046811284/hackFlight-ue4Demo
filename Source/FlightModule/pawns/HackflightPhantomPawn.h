@@ -31,6 +31,7 @@ class FLIGHTMODULE_API AHackflightPhantomPawn : public APawn {
 
         // AActor overrides
 
+		//≥ı ºªØ: FHackflightFlightManager
         virtual void BeginPlay() override;
 		
 		

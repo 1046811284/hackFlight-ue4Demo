@@ -77,25 +77,27 @@ class TinyWhoop {
 
     public:
 
+
+		//构建mesh:
         void build(APawn * pawn)
         {
-            // Build the frame
+            // Build the frame: 机身
             vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.50);
 
-            // Add propellers
+            // Add propellers:  4个旋翼 + 位置
             float x13 = -.0470, x24 = +.0430, y14 = -.020, y23 = +.070;
             vehicle.addProp(PropCCWStatics.mesh.Get(), x13, y14);
             vehicle.addProp(PropCCWStatics.mesh.Get(), x24, y23);
             vehicle.addProp(PropCCWStatics.mesh.Get(), x13, y23);
             vehicle.addProp(PropCCWStatics.mesh.Get(), x24, y14);
 
-            // Add motor barrels
+            // Add motor barrels :  机桶
             addMotor(Motor1Statics.mesh.Get(), 1);
             addMotor(Motor2Statics.mesh.Get(), 2);
             addMotor(Motor3Statics.mesh.Get(), 3);
             addMotor(Motor4Statics.mesh.Get(), 4);
 
-            // Add battery, camera, etc.
+            // Add battery, camera, etc. //电池-相机等 mesh
             vehicle.addMesh(BatteryStatics.mesh.Get(), "BatteryMesh");
             vehicle.addMesh(CameraMountStatics.mesh.Get(), "CameraMountMesh");
             vehicle.addMesh(CameraStatics.mesh.Get(), "CameraMesh");

@@ -16,9 +16,9 @@
 #include "GameFramework/Pawn.h"
 
 // Structures to hold static mesh initializations
-DECLARE_STATIC_MESH(FFrameStatics, "Phantom/Frame.Frame", FrameStatics)
-DECLARE_STATIC_MESH(FPropStatics, "Phantom/Prop.Prop", PropStatics)
-
+DECLARE_STATIC_MESH(FFrameStatics, "Phantom/Frame.Frame", FrameStatics)//找到资源 FrameStatics
+DECLARE_STATIC_MESH(FPropStatics, "Phantom/Prop.Prop", PropStatics)//找到资源  PropStatics
+ 
 //大疆精灵: Phantom 
 class Phantom {
 
@@ -58,10 +58,11 @@ class Phantom {
 		//构建:  vehicle的各个Mesh
         void build(APawn * pawn)
         {
+			//mesh1:
             vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.5);
 
             // Add propellers
-			//添加组件:  4个旋翼???
+			//添加组件:  4个旋翼  + 位置
             addProp(+1, +1);
             addProp(-1, -1);
             addProp(+1, -1);
@@ -75,6 +76,7 @@ class Phantom {
             vehicle.PostInitializeComponents();
         }
 
+		//初始化:  FHackflightFlightManager !!!
         void BeginPlay(FFlightManager * flightManager)
         {
             _flightManager = flightManager;

@@ -28,8 +28,10 @@ class FThreadedManager : public FRunnable {
     protected:
 
         // Implemented differently by each subclass
+		//实现当前任务内容:
         virtual void performTask(double currentTime) = 0;
 
+		//获取当前帧数:
         uint32_t getFps(void)
         {
             return (uint32_t)(_count/(FPlatformTime::Seconds()-_startTime));
@@ -76,6 +78,7 @@ class FThreadedManager : public FRunnable {
 			return FRunnable::Init();
         }
 
+		//运行:
         virtual uint32_t Run() override
         {
             // Initial wait before starting
@@ -98,6 +101,7 @@ class FThreadedManager : public FRunnable {
 			return 0;
         }
 
+		//停止
         virtual void Stop() override
         {
             _running = false;

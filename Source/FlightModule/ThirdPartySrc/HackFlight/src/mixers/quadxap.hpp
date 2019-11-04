@@ -40,10 +40,10 @@ namespace hf {
                 : Mixer(4)
             {
                 //                     Th  RR  PF  YR
-                motorDirections[0] = { +1, -1, -1, -1 };    // 1 right front
-                motorDirections[1] = { +1, +1, +1, -1 };    // 2 left rear
-                motorDirections[2] = { +1, +1, -1, +1 };    // 3 left front
-                motorDirections[3] = { +1, -1, +1, +1 };    // 4 right rear
+                motorDirections[0] = { +1, -1, -1, -1 };    // 1 right front  右前
+                motorDirections[1] = { +1, +1, +1, -1 };    // 2 left rear  左后
+                motorDirections[2] = { +1, +1, -1, +1 };    // 3 left front  左前
+                motorDirections[3] = { +1, -1, +1, +1 };    // 4 right rear  右后
             }
     };
 

@@ -25,19 +25,26 @@
 
 namespace hf {
 
+	//2个轴角度的pid: roll和pitch
     class LevelPid : public PidController {
 
         private:
 
             // Helper class
+			//定义单个轴的pid:   角度pid
             class _AnglePid : public Pid {
 
                 private:
 
+					//最大角度: roll /pitch的
                     static constexpr float MAX_ANGLE_DEGREES = 45;
 
                     // Maximum roll pitch demand is +/-0.5, so to convert demand to 
                     // angle for error computation, we multiply by the folling amount:
+					//roll/pitch的乘数:    
+						//1° = π / 180 ≈ 0.01745 rad
+						//1rad = 180 / π = 57.30°
+						//Filter::deg2rad:  转换为度数
                     float _demandMultiplier = 2 * Filter::deg2rad(MAX_ANGLE_DEGREES);
 
                 public:
@@ -54,6 +61,8 @@ namespace hf {
 
             }; // class _AnglePid
 
+
+			//2个轴的pid: roll和pitch
             _AnglePid _rollPid;
             _AnglePid _pitchPid;
 
@@ -70,6 +79,7 @@ namespace hf {
             {
             }
 
+			//计算2个轴的:  pid
             void modifyDemands(state_t & state, demands_t & demands)
             {
                 demands.roll  = _rollPid.compute(demands.roll, state.rotation[0]); 

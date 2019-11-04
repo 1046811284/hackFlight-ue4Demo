@@ -349,6 +349,7 @@ namespace hf {
             void update(void)
             {
                 // Grab control signal if available
+				//检测是否有控制信号
                 checkReceiver();
 
                 // Check mandatory sensors

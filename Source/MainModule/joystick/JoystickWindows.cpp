@@ -52,13 +52,15 @@ Joystick::Joystick(const char * devname)
     _isGameController = false;
 
     // Grab the first available joystick
+	//遍历:  直到 " == JOYERR_NOERROR"  ==> 即找到手柄型号!
     for (_joystickId=0; _joystickId<16; _joystickId++)
 		//windowsAPI:  获取手柄设备的型号
         if (joyGetDevCaps(_joystickId, &joycaps, sizeof(joycaps)) == JOYERR_NOERROR)
             break;
 
+	//找到:
     if (_joystickId < 16) {
-
+		//设备id:
         _productId = joycaps.wPid;
 
         _isGameController = !(_productId==PRODUCT_TARANIS || _productId==PRODUCT_SPEKTRUM);
@@ -90,7 +92,7 @@ Joystick::error_t Joystick::pollProduct(float axes[6], uint8_t & buttons)
     JOYINFOEX joyState;
     joyState.dwSize=sizeof(joyState);
     joyState.dwFlags=JOY_RETURNALL | JOY_RETURNPOVCTS | JOY_RETURNCENTERED | JOY_USEDEADZONE;
-	//windows的API: 获取手柄状态joyState
+	//windows的API:   获取手柄状态joyState 和  _joystickId(设备id)
     joyGetPosEx(_joystickId, &joyState);
 
     // axes(轴): 0=Thr 1=Ael 2=Ele 3=Rud 4=Aux
