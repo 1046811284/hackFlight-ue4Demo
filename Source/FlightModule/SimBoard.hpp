@@ -30,12 +30,14 @@ class SimBoard : public hf::Board {
     protected:
 
 
+		//获取四元素测量的值:
         bool getQuaternion(float & qw, float & qx, float & qy, float & qz)
         {
 			_qcount = ((_qcount+1) % Q_DIVISOR);
 
 			if (_qcount) return false;
 
+			//改变实参:
             qw =   _quat[0];
             qx = - _quat[1];// invert X
             qy = - _quat[2];// invert Y
@@ -44,8 +46,10 @@ class SimBoard : public hf::Board {
             return true;
         }
 
+		//获取陀螺仪测量的值:
         bool getGyrometer(float & gx, float & gy, float & gz)
         {
+			//改变实参:
             gx = _gyro[0];
             gy = _gyro[1];
             gz = _gyro[2];
@@ -53,6 +57,7 @@ class SimBoard : public hf::Board {
             return true;
         }
 
+		//对motors[]值, 进行设置 ==> 这样,下面的getMotors才能获取到
         void writeMotor(uint8_t index, float value)
         {
             _motors[index] = value;
@@ -74,21 +79,26 @@ class SimBoard : public hf::Board {
 		{ 
 		}
 
+		//对_quat 和 _gyro初始化
+		//同时返回:  motors
         void getMotors(const double time, const double quat[4], const double gyro[3], double * motors, uint8_t motorCount)
         {
             _currentTime = time;
 
             // Copy in quaternion
+			//从参数: 拷贝四元数:
             for (uint8_t j=0; j<4; ++j) {
                 _quat[j] = quat[j];
             }
 
             // Copy in gyro
+			//从参数拷贝:  拷贝Gyrometer:   陀螺测试仪
             for (uint8_t j=0; j<3; ++j) {
                 _gyro[j] = gyro[j];
             }
 
             // Copy out motors
+			//吧旋翼==> 写入到参数motors
             for (uint8_t j=0; j<motorCount; ++j) {
                 motors[j] = _motors[j];
             }

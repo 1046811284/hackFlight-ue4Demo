@@ -67,7 +67,7 @@ namespace hf {
             virtual bool ready(float time) override
             {
                 (void)time;
-
+				//改变实参:  _w, _x, _y, _z
                 return board->getQuaternion(_w, _x, _y, _z);
             }
 

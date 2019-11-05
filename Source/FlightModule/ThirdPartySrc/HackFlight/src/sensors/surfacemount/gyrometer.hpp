@@ -52,7 +52,7 @@ namespace hf {
             virtual bool ready(float time) override
             {
                 (void)time;
-
+				//改变实参_x, _y, _z:
                 bool result = board->getGyrometer(_x, _y, _z);
 
                 return result;

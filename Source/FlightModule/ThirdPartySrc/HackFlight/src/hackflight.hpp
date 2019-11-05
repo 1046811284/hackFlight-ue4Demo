@@ -40,6 +40,7 @@ namespace hf {
             static constexpr float MAX_ARMING_ANGLE_DEGREES = 25.0f;
 
             // Passed to Hackflight::init() for a particular build
+			//通过 Hackflight::init() 初始化这3个
             Board      * _board = NULL;
             Receiver   * _receiver = NULL;
             Mixer      * _mixer = NULL;
@@ -52,10 +53,14 @@ namespace hf {
             uint8_t _pid_controller_count = 0;
 
             // Mandatory sensors on the board
+			//板子上的:  2个传感器
+				//不是真正的传感器, 我们模拟一个(引擎可以直接获取)
             Gyrometer _gyrometer;
+			//飞机四元数(姿态):
             Quaternion _quaternion; // not really a sensor, but we treat it like one!
 
             // Additional sensors 
+			//其他传感器
             Sensor * _sensors[256] = {NULL};
             uint8_t _sensor_count = 0;
 
@@ -72,79 +77,110 @@ namespace hf {
             // Support for headless mode
             float _yawInitial = 0;
 
+			//判断是否是:  安全角度范围内
             bool safeAngle(uint8_t axis)
             {
                 return fabs(_state.rotation[axis]) < Filter::deg2rad(MAX_ARMING_ANGLE_DEGREES);
             }
 
+			//对_quaternion进行设置:	
+				//1) _quaternion.ready() 对_quaternion值进行更新
+				//2)把_quaternion==>定义到  _state.rotation成员中:
             void checkQuaternion(void)
             {
                 // Some quaternion filters may need to know the current time
+				//当前时间:
                 float time = _board->getTime();
 
                 // If quaternion data ready
+				//四元数是否已经初始化:
+					//1) _quaternion.ready() 对_quaternion值进行更新
                 if (_quaternion.ready(time)) {
 
                     // Adjust quaternion values based on IMU orientation
+					//对_quaternion 变量更新:    基于  惯性测量单元测量  (SimBoard.hpp未实现)
                     _board->adjustQuaternion(_quaternion._w, _quaternion._x, _quaternion._y, _quaternion._z);
 
                     // Update state with new quaternion to yield Euler angles
+					//2)把_quaternion==>定义到  _state.rotation成员中:
                     _quaternion.modifyState(_state, time);
 
                     // Adjust Euler angles to compensate for sloppy IMU mounting
+					//调整 欧拉角,来  来弥补IMU安装调整   (SimBoard.hpp未实现)
                     _board->adjustRollAndPitch(_state.rotation[0], _state.rotation[1]);
 
                     // Synch serial comms to quaternion check
+					//同步一系列命令到:  四元素检测  (SimBoard.hpp未实现)
                     doSerialComms();
                 }
             }
 
+			//对Gyrometer进行设置: (姿态进行更新)
             void checkGyrometer(void)
             {
                 // Some gyrometers may need to know the current time
                 float time = _board->getTime();
 
                 // If gyrometer data ready
+				//_gyrometer.ready() :  对_gyrometer值进行更新
                 if (_gyrometer.ready(time)) {
 
-                    // Adjust gyrometer values based on IMU orientation
+                    // Adjust gyrometer values based on IMU orientation 
+					//从Board获取  gyrometer, ==>(SimBoard.hpp未实现)
                     _board->adjustGyrometer(_gyrometer._x, _gyrometer._y, _gyrometer._z);
 
                     // Update state with gyro rates
+					//_gyrometer 写入到 :  _state.angularVel[]数组中
                     _gyrometer.modifyState(_state, time);
 
                     // For PID control, start with demands from receiver, scaling roll/pitch/yaw by constant
+					//对输入进行缩放:
                     _demands.throttle = _receiver->demands.throttle;
                     _demands.roll     = _receiver->demands.roll  * _receiver->_demandScale;
                     _demands.pitch    = _receiver->demands.pitch * _receiver->_demandScale;
                     _demands.yaw      = _receiver->demands.yaw   * _receiver->_demandScale;
 
-                    // Sync PID controllers to gyro update
+
+					// Sync PID controllers to gyro update
+					//对所有pidController进行更新==> 从而修改 _demands的<部分>值
+						//用pid, 对姿态进行更新:
                     runPidControllers();
 
+
                     // Use updated demands to run motors
+					//(_state.armed为true:   ===> 执行_mixer->runArmed()
                     if (_state.armed && !_failsafe && !_receiver->throttleIsDown()) {
                         _mixer->runArmed(_demands);
                     }
                 }
             }
 
+			//对所有pidController进行更新==> 从而修改 _demands的值
             void runPidControllers(void)
             {
                 // Each PID controllers is associated with at least one auxiliary switch state
-                uint8_t auxState = _receiver->getAux1State();
+				//每一个PID控制器与至少一个辅助开关的状态有关
+                uint8_t auxState = _receiver->getAux1State();//开关是否按下
 
                 // Some PID controllers should cause LED to flash when they're active
+				//一些pid 可以引起 LED闪烁
                 bool shouldFlash = false;
 
+
+				//遍历所有pid_Controller:
                 for (uint8_t k=0; k<_pid_controller_count; ++k) {
 
                     PidController * pidController = _pid_controllers[k];
 
+					//pid是否更新条件:
+						//根据pid的auxState  和 aux状态,对pid进行更新
                     if (pidController->auxState <= auxState) {
-
+						//那么: 用pid来更新   ==> demands中成员的值: (4个pid,4个定义!!)
+							//_state: 当前状态
+							//_demands: 返回修改自己
                         pidController->modifyDemands(_state, _demands); 
 
+						//是否闪烁LED:   有些pidController子类, 返回的是true  ==> 如AltitudeHoldPid
                         if (pidController->shouldFlashLed()) {
                             shouldFlash = true;
                         }
@@ -152,12 +188,14 @@ namespace hf {
                 }
 
                 // Flash LED for certain PID controllers
+				//刷新LED:  闪烁
                 _board->flashLed(shouldFlash);
             }
 
             void checkReceiver(void)
             {
                 // Sync failsafe to receiver
+				//同步:  安全保障的接收器
                 if (_receiver->lostSignal() && _state.armed) {
                     _mixer->cutMotors();
                     _state.armed = false;
@@ -167,14 +205,18 @@ namespace hf {
                 }
 
                 // Check whether receiver data is available
+				//检测接收的数据是否有效:  
+					//并设置  _receiver->demands的值
                 if (!_receiver->getDemands(_state.rotation[AXIS_YAW] - _yawInitial)) return;
 
                 // Update PID controllers with receiver demands
+				//用上面设置的: _receiver->demands , 进行PID更新
                 for (uint8_t k=0; k<_pid_controller_count; ++k) {
+					//更新所有PID controller:   使用参数_receiver->demands
                     _pid_controllers[k]->updateReceiver(_receiver->demands, _receiver->throttleIsDown());
                 }
 
-                // Disarm
+                // Disarm:  如果Aux2按钮没有按下==>禁止arm
                 if (_state.armed && !_receiver->getAux2State()) {
                     _state.armed = false;
                 } 
@@ -201,8 +243,13 @@ namespace hf {
 
             } // checkReceiver
 
+
+
+
+			// (SimBoard.hpp未实现)
             void doSerialComms(void)
             {
+				//(SimBoard.hpp未实现)
                 while (_board->serialAvailableBytes() > 0) {
 
                     if (MspParser::parse(_board->serialReadByte())) {
@@ -210,11 +257,12 @@ namespace hf {
                     }
                 }
 
+				//(SimBoard.hpp未实现)
                 while (MspParser::availableBytes() > 0) {
                     _board->serialWriteByte(MspParser::readByte());
                 }
 
-                // Support motor testing from GCS
+                // Support motor testing from GCS (门控开关)
                 if (!_state.armed) {
                     _mixer->runDisarmed();
                 }
@@ -231,15 +279,18 @@ namespace hf {
                 }
             }
 
+			//加到传感器数组:
             void add_sensor(Sensor * sensor)
             {
                 _sensors[_sensor_count++] = sensor;
             }
 
+			//设置传感器
             void add_sensor(SurfaceMountSensor * sensor, Board * board) 
             {
+				//加到传感器数组:
                 add_sensor(sensor);
-
+				//board :
                 sensor->board = board;
             }
 
@@ -297,9 +348,11 @@ namespace hf {
 
         public:
 
+			//初始化 board,  * receiver,  * mixer:
             void init(Board * board, Receiver * receiver, Mixer * mixer, bool armed=false)
             {  
                 // Store the essentials
+				//初始化值:
                 _board    = board;
                 _receiver = receiver;
                 _mixer    = mixer;
@@ -308,6 +361,7 @@ namespace hf {
                 _debugger.init(board);
 
                 // Support for mandatory sensors
+				//吧board添加, 传感器成员
                 add_sensor(&_quaternion, board);
                 add_sensor(&_gyrometer, board);
 
@@ -339,10 +393,12 @@ namespace hf {
                 add_sensor(sensor);
             }
 
+			//对pidController:  添加到数组, 并设置auxState
             void addPidController(PidController * pidController, uint8_t auxState=0) 
             {
+				//设置auxState: 
                 pidController->auxState = auxState;
-
+				//添加到数组:
                 _pid_controllers[_pid_controller_count++] = pidController;
             }
 
@@ -353,11 +409,11 @@ namespace hf {
                 checkReceiver();
 
                 // Check mandatory sensors
-                checkGyrometer();
-                checkQuaternion();
+                checkGyrometer();//陀螺测试仪
+                checkQuaternion();//四元数
 
                 // Check optional sensors
-                checkOptionalSensors();
+                checkOptionalSensors();//选项传感器?
             } 
 
     }; // class Hackflight

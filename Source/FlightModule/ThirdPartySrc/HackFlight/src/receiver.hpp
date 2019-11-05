@@ -36,11 +36,12 @@ namespace hf {
         private: 
 
             const float THROTTLE_MARGIN = 0.1f;
-            const float CYCLIC_EXPO     = 0.65f;
-            const float CYCLIC_RATE     = 0.90f;
-            const float THROTTLE_EXPO   = 0.20f;
-            const float AUX_THRESHOLD   = 0.4f;
+            const float CYCLIC_EXPO     = 0.65f;//循环 exponential(指数)
+            const float CYCLIC_RATE     = 0.90f;//循环比率
+            const float THROTTLE_EXPO   = 0.20f;//节流 exponential(指数)
+            const float AUX_THRESHOLD   = 0.4f;//阈值
 
+	//表达式: 对输入做一些指数/等公式处理==> 然后得到值
             float adjustCommand(float command, uint8_t channel)
             {
                 command /= 2;
@@ -57,10 +58,12 @@ namespace hf {
                 return rcFun(command, CYCLIC_EXPO, CYCLIC_RATE);
             }
 
+			//取输入的绝对值:
             float makePositiveCommand(uint8_t channel)
             {
                 return fabs(rawvals[_channelMap[channel]]);
             }
+
 
             static float rcFun(float x, float e, float r)
             {
@@ -68,10 +71,10 @@ namespace hf {
             }
 
             // [-1,+1] -> [0,1] -> [-1,+1]
-            float throttleFun(float x)
+            float throttleFun(float x)//[-1,1]
             {
                 float mid = 0.5;
-                float tmp = (x + 1) / 2 - mid;
+                float tmp = (x + 1) / 2 - mid;//[-0.5,0.5]
                 float y = tmp>0 ? 1-mid : (tmp<0 ? mid : 1);
                 return (mid + tmp*(1-THROTTLE_EXPO + THROTTLE_EXPO * (tmp*tmp) / (y*y))) * 2 - 1;
             }
@@ -99,6 +102,7 @@ namespace hf {
             uint8_t _channelMap[6] = {0};
 
             // These must be overridden for each receiver
+			//必须在子类中重写
             virtual bool gotNewFrame(void) = 0;
             virtual void readRawvals(void) = 0;
 
@@ -111,6 +115,7 @@ namespace hf {
             float _trimYaw = 0;
 
             // Default to non-headless mode
+			//默认是:  无头模式
             float headless = false;
 
             // Raw receiver values in [-1,+1]
@@ -119,19 +124,24 @@ namespace hf {
 
             demands_t demands;
 
+			//获取某一个元素的输入:
             float getRawval(uint8_t chan)
             {
                 return rawvals[_channelMap[chan]];
             }
 
             // Override this if your receiver provides RSSI or other weak-signal detection
+			//重写:  用于: 接收信号强度指示
             virtual bool lostSignal(void) { return false; }
 
             /**
               * channelMap: throttle, roll, pitch, yaw, aux, arm
               */
+			//channelMap参数: 的顺序是 throttle, roll, pitch, yaw, aux, arm
             Receiver(const uint8_t channelMap[6], float demandScale=1.0) 
             { 
+				//初始化_channelMap[]值:   
+					//throttle, roll, pitch, yaw, aux, arm 和 6个输入对应(1到6)
                 for (uint8_t k=0; k<6; ++k) {
                     _channelMap[k] = channelMap[k];
                 }
@@ -143,63 +153,79 @@ namespace hf {
                 _demandScale = demandScale;
             }
 
+			//1)检测接收的数据是否有效:  查看引用
+			//2)设置demands 和 _aux1State/_aux2State的值:
             bool getDemands(float yawAngle)
             {
                 // Wait till there's a new frame
+					//等待, 直到更高进度的帧
                 if (!gotNewFrame()) return false;
 
                 // Read raw channel values
                 readRawvals();
 
                 // Convert raw [-1,+1] to absolute value
+				//把[-1,+1] ,转换为绝对值
                 demands.roll  = makePositiveCommand(CHANNEL_ROLL);
                 demands.pitch = makePositiveCommand(CHANNEL_PITCH);
                 demands.yaw   = makePositiveCommand(CHANNEL_YAW);
 
                 // Apply expo nonlinearity to roll, pitch
+				//非线性表达式??: 用于roll和pitch
                 demands.roll  = applyCyclicFunction(demands.roll);
                 demands.pitch = applyCyclicFunction(demands.pitch);
 
                 // Put sign back on command, yielding [-0.5,+0.5]
+				//把值, 调整到 [-0.5,+0.5]
                 demands.roll  = adjustCommand(demands.roll, CHANNEL_ROLL);
                 demands.pitch = adjustCommand(demands.pitch, CHANNEL_PITCH);
                 demands.yaw   = adjustCommand(demands.yaw, CHANNEL_YAW);
 
                 // Add in software trim
+				//加入软件: 裁剪?
                 demands.roll  += _trimRoll;
                 demands.pitch += _trimPitch;
                 demands.yaw   += _trimYaw;
 
                 // Support headless mode
+				//支持无头模式(无人机-无头模式=>百度)  ==> 即无视yaw旋转,向目标点飞行
                 if (headless) {
                     float c = cos(yawAngle);
                     float s = sin(yawAngle);
                     float p = demands.pitch;
                     float r = demands.roll;
                     
+					//算出:，测量飞行器相对于地球磁场的角度， ==> 实现无头模式
                     demands.roll  = c*r - s*p;
                 }
 
                 // Yaw demand needs to be reversed
+				//YAW取相反值
                 demands.yaw = -demands.yaw;
 
                 // Pass throttle demand through exponential function
+				//油门通过: 指数表达式获取  ===> 缓冲效果??
                 demands.throttle = throttleFun(rawvals[_channelMap[CHANNEL_THROTTLE]]);
 
                 // Store auxiliary switch state
-                _aux1State = getRawval(CHANNEL_AUX1) >= 0.0 ? (getRawval(CHANNEL_AUX1) > AUX_THRESHOLD ? 2 : 1) : 0;
-                _aux2State = getRawval(CHANNEL_AUX2) >= AUX_THRESHOLD ? 1 : 0;
+				//存放: 2个备用开关, 状态
+					//channelMap: throttle, roll, pitch, yaw, aux, arm  ==> aux是aux, arm的输入
+                _aux1State = getRawval(CHANNEL_AUX1) >= 0.0 ? (getRawval(CHANNEL_AUX1) > AUX_THRESHOLD ? 2 : 1) : 0;//输入>0.4否: 是取2 ==>0.4到>0.0,取1 ==> <0取0
+                _aux2State = getRawval(CHANNEL_AUX2) >= AUX_THRESHOLD ? 1 : 0;//>0.4否==> 是取1/ 不是取0
+				
 
                 // Got a new frame
                 return true;
 
             }  // getDemands
 
+		//throttle是否按下:
             bool throttleIsDown(void)
             {
                 return getRawval(CHANNEL_THROTTLE) < -1 + THROTTLE_MARGIN;
             }
 
+		//获取2个开关状态:
             virtual uint8_t getAux1State(void)
             {
                 return _aux1State;
@@ -211,7 +237,7 @@ namespace hf {
             }
 
         public:
-
+		//设置trim:
             void setTrimRoll(float trim)
             {
                 _trimRoll = trim;

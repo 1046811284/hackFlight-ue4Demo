@@ -94,12 +94,14 @@ class FHackflightFlightManager : public FFlightManager {
             _hackflight.addSensor(_sensors);
 
 
-		//pid控制器:
+		//pid控制器: 初始化 , ==> 状态1或0  ==> 见hackflight.hpp的runPidControllers()使用
 			// Add altitude-hold and position-hold PID controllers in switch position 1
+			//对pidController:  添加到数组, 并设置auxState 为1 ===> switch position为 1时更新 (aux按下时才更新)
 			_hackflight.addPidController(&althold, 1);
 			_hackflight.addPidController(&flowhold, 1);
 
 			// Add rate and level PID controllers for all aux switch positions
+			//添加到数组, 但是, auxState 为0  ===> switch positions 任何时候更新 (不用管aux按下否)
 			_hackflight.addPidController(&levelPid);
 			_hackflight.addPidController(&ratePid);
 		}

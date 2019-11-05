@@ -39,12 +39,21 @@ namespace hf {
             MixerQuadXAP(void) 
                 : Mixer(4)
             {
+				//motorDirections:  motor的方向:  1是顺时针转, -1是逆时针转
                 //                     Th  RR  PF  YR
-                motorDirections[0] = { +1, -1, -1, -1 };    // 1 right front  右前
+                motorDirections[0] = { +1, -1, -1, -1 };    // 1 right front  右前  ===> 索引 1/2/3/4 ==> 分别对应的是哪个旋翼
                 motorDirections[1] = { +1, +1, +1, -1 };    // 2 left rear  左后
                 motorDirections[2] = { +1, +1, -1, +1 };    // 3 left front  左前
                 motorDirections[3] = { +1, -1, +1, +1 };    // 4 right rear  右后
-            }
+
+				//4个值分别是:
+				//typedef struct motorMixer_t {
+				//	int8_t throttle; // T  ==> th
+				//	int8_t roll; 	 // A   ==>  rr
+				//	int8_t pitch;	 // E   ==> pf
+				//	int8_t yaw;	     // R    ==>yr
+				//} motorMixer_t;
+            }	//
     };
 
 } // namespace

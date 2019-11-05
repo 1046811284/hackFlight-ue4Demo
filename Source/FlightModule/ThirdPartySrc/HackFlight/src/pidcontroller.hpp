@@ -42,6 +42,7 @@ namespace hf {
 		//超出最大范围:  reset:
         virtual void updateReceiver(demands_t & demands, bool throttleIsDown) { (void)demands; (void)throttleIsDown; }
 
+		//辅助开关, 状态
         uint8_t auxState = 0;
 
     };  // class PidController

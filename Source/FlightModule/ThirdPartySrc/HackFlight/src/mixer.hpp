@@ -33,6 +33,7 @@ namespace hf {
         private:
 
             // Custom mixer data per motor
+			//每个motor的 mixer数据:
             typedef struct motorMixer_t {
                 int8_t throttle; // T
                 int8_t roll; 	 // A
@@ -45,10 +46,15 @@ namespace hf {
 
             float _motorsPrev[MAXMOTORS] = {0};
 
+
+			//更新每个motor的值:
             void writeMotor(uint8_t index, float value)
             {
                 // Avoid sending the motor the same value over and over
+				//避免反复发送相同的值:  到 motor
+					//更前面的值不同,再返送
                 if (_motorsPrev[index] != value) {
+					//motor的索引,  对应的值
                     board->writeMotor(index,value);
                 }
 
@@ -66,6 +72,7 @@ namespace hf {
                 nmotors = _nmotors;
 
                 // set disarmed, previous motor values
+				//初始值: 给0
                 for (uint8_t i = 0; i < nmotors; i++) {
                     motorsDisarmed[i] = 0;
                     _motorsPrev[i] = 0;
@@ -75,17 +82,22 @@ namespace hf {
 
             // These are also use by MSP
             float  motorsDisarmed[MAXMOTORS];
+			//motors的数量:
             uint8_t nmotors;
+
 
             void runArmed(demands_t demands)
             {
                 // Map throttle demand from [-1,+1] to [0,1]
+				//油门范围映射:  [-1,+1] to [0,1]
                 demands.throttle = (demands.throttle + 1) / 2;
 
                 float motors[MAXMOTORS];
 
+				//设置motors[i]: 
                 for (uint8_t i = 0; i < nmotors; i++) {
-
+					//根据roll-pitch等: 计算出每个旋翼的值:
+						//motorDirections[i] 的值==> 在子类中有定义的:  见 MixerQuadXAP
                     motors[i] = 
                         (demands.throttle * motorDirections[i].throttle + 
                          demands.roll     * motorDirections[i].roll +     
@@ -93,31 +105,37 @@ namespace hf {
                          demands.yaw      * motorDirections[i].yaw);      
                 }
 
+				//找到4个motor的最大值:  maxMotor
                 float maxMotor = motors[0];
-
                 for (uint8_t i = 1; i < nmotors; i++)
                     if (motors[i] > maxMotor)
                         maxMotor = motors[i];
-
+				
+				//motors[i] 设置值:
                 for (uint8_t i = 0; i < nmotors; i++) {
 
                     // This is a way to still have good gyro corrections if at least one motor reaches its max
+					//这仍然是一种有良好的陀螺修正, 如果至少一个电机达到最大值
                     if (maxMotor > 1) {
                         motors[i] -= maxMotor - 1;
                     }
 
                     // Keep motor values in interval [0,1]
+					//clamp到:  [0,1]
                     motors[i] = Filter::constrainMinMax(motors[i], 0, 1);
                 }
 
+				//更新每个motor的值:  ===> 用 motors[i]
                 for (uint8_t i = 0; i < nmotors; i++) {
                     writeMotor(i, motors[i]);
                 }
             }
 
             // This is how we can spin the motors from the GCS
+			//这是我们如何用GCS:   旋转马达
             void runDisarmed(void)
             {
+				//更新每个motor的值:  ===> 用 motorsDisarmed[i]
                 for (uint8_t i = 0; i < nmotors; i++) {
                     writeMotor(i, motorsDisarmed[i]);
                 }
