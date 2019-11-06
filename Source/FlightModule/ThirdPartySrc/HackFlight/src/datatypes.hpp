@@ -39,14 +39,14 @@ namespace hf {
 
     typedef struct {
 
-        bool  armed;
+        bool  armed;//起落架??
 
-        float location[3];
-        float rotation[3]; 
-        float angularVel[3]; 
-        float bodyAccel[3]; 
-        float bodyVel[3]; 
-        float inertialVel[3]; 
+        float location[3]; //位置
+        float rotation[3]; //旋转
+        float angularVel[3]; //角速度
+        float bodyAccel[3];  //本地坐标系-加速度
+        float bodyVel[3]; //本地坐标系-速度
+        float inertialVel[3]; //惯性坐标系-速度
 
     } state_t;
 

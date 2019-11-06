@@ -85,7 +85,7 @@ namespace hf {
 			//motors的数量:
             uint8_t nmotors;
 
-
+			//根据想要达到的角度demands * mixer ==> 得到, 想要的转速  ==> 设置mixer
             void runArmed(demands_t demands)
             {
                 // Map throttle demand from [-1,+1] to [0,1]
@@ -95,9 +95,11 @@ namespace hf {
                 float motors[MAXMOTORS];
 
 				//设置motors[i]: 
+					//根据想要达到的角度demands * mixer ==> 得到, 想要的转速
                 for (uint8_t i = 0; i < nmotors; i++) {
 					//根据roll-pitch等: 计算出每个旋翼的值:
 						//motorDirections[i] 的值==> 在子类中有定义的:  见 MixerQuadXAP
+						//* 混合控制器mixer = 结果
                     motors[i] = 
                         (demands.throttle * motorDirections[i].throttle + 
                          demands.roll     * motorDirections[i].roll +     
@@ -132,7 +134,7 @@ namespace hf {
             }
 
             // This is how we can spin the motors from the GCS
-			//这是我们如何用GCS:   旋转马达
+			//从地面工作站(GCS):  来旋转motor
             void runDisarmed(void)
             {
 				//更新每个motor的值:  ===> 用 motorsDisarmed[i]
@@ -141,6 +143,7 @@ namespace hf {
                 }
             }
 
+			//设置所有motor转速为0:
             void cutMotors(void)
             {
                 for (uint8_t i = 0; i < nmotors; i++) {

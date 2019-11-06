@@ -79,7 +79,7 @@ class SimBoard : public hf::Board {
 		{ 
 		}
 
-		//对_quat 和 _gyro初始化
+		//对_quat(姿态) 和 _gyro(角速度)初始化
 		//同时返回:  motors
         void getMotors(const double time, const double quat[4], const double gyro[3], double * motors, uint8_t motorCount)
         {

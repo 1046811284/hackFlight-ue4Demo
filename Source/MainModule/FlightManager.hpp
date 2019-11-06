@@ -94,7 +94,7 @@ class FFlightManager : public FThreadedManager {
             // PID controller: update the flight manager (e.g., HackflightManager) with
             // the dynamics state, getting back the motor values
 			//根据:  更新飞行状态  
-				//返回_motorvals 转速:
+				//返回_motorvals 转速: 每个motor的转速
             this->getMotors(currentTime, _state, _motorvals);
 
             // Track previous time for deltaT

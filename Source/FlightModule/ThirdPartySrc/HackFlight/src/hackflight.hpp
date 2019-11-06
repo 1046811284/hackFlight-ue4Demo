@@ -55,7 +55,7 @@ namespace hf {
             // Mandatory sensors on the board
 			//板子上的:  2个传感器
 				//不是真正的传感器, 我们模拟一个(引擎可以直接获取)
-            Gyrometer _gyrometer;
+            Gyrometer _gyrometer;//角速度
 			//飞机四元数(姿态):
             Quaternion _quaternion; // not really a sensor, but we treat it like one!
 
@@ -115,7 +115,7 @@ namespace hf {
                 }
             }
 
-			//对Gyrometer进行设置: (姿态进行更新)
+			//对Gyrometer(角-->速度)进行设置: (姿态进行更新)
             void checkGyrometer(void)
             {
                 // Some gyrometers may need to know the current time
@@ -148,8 +148,9 @@ namespace hf {
 
 
                     // Use updated demands to run motors
-					//(_state.armed为true:   ===> 执行_mixer->runArmed()
+					//通过设置motors的转速 ==> 达到更新demands角度的目的:
                     if (_state.armed && !_failsafe && !_receiver->throttleIsDown()) {
+						//根据想要达到的角度demands * mixer ==> 得到, 想要的转速  ==> 设置mixer
                         _mixer->runArmed(_demands);
                     }
                 }
@@ -194,15 +195,24 @@ namespace hf {
 
             void checkReceiver(void)
             {
+
                 // Sync failsafe to receiver
-				//同步:  安全保障的接收器
+				//失效保护:
+					//因为无线电波在传输过程中可能受到干扰或是数据丢失等等问题，当接收机无法接收到发射器的数据时，通常会进入保护状态，
+						//也就是仍旧向无人机发送控制信号，此时的信号就是接收机收到遥控器发射器最后一次的有效数据。==>这样因为信号丢失而发送的保护数数据通常叫做failsafe数据。
+				//如果丢失了遥控器型号,  同时起落架是打开状态:
                 if (_receiver->lostSignal() && _state.armed) {
+					//设置转速为0
                     _mixer->cutMotors();
+					//收起起落架
                     _state.armed = false;
+					//打开失效保护==> 设置为true:
                     _failsafe = true;
+					//显示arm状态:
                     _board->showArmedStatus(false);
                     return;
                 }
+
 
                 // Check whether receiver data is available
 				//检测接收的数据是否有效:  
@@ -216,29 +226,39 @@ namespace hf {
                     _pid_controllers[k]->updateReceiver(_receiver->demands, _receiver->throttleIsDown());
                 }
 
-                // Disarm:  如果Aux2按钮没有按下==>禁止arm
+                // Disarm:  
+					//只有Aux2按钮按下时: 才可以打开起落架!!
+				//如起落架已经打开了, 并且 Aux2按钮没有按下  ==> 收起起落架
                 if (_state.armed && !_receiver->getAux2State()) {
-                    _state.armed = false;
+                    _state.armed = false;  //收起起落架
                 } 
 
                 // Avoid arming if aux2 switch down on startup
+				//避免展开起落架:    如果当启动时, aux2开关向下按:
+				//设置_safeToArm:  用于下面判定是否可以可以进行arm操作
                 if (!_safeToArm) {
                     _safeToArm = !_receiver->getAux2State();
                 }
 
                 // Arm (after lots of safety checks!)
+				//在大量的安全检查(一堆判断条件)之后:   进行Arm操作==> 打开起落架
                 if (_safeToArm && !_state.armed && _receiver->throttleIsDown() && _receiver->getAux2State() && 
                         !_failsafe && safeAngle(AXIS_ROLL) && safeAngle(AXIS_PITCH)) {
+					//设置为true:   (开始打开起落架)
                     _state.armed = true;
+					//为无头模式: 设置yaw  ==>
                     _yawInitial = _state.rotation[AXIS_YAW]; // grab yaw for headless mode
                 }
 
                 // Cut motors on throttle-down
+				// _state.armed 为true  (起落架打开:)
+					//且: throttle是否完全向下按:  (向下飞)  ===>   motror设置为0 (停止旋转)
                 if (_state.armed && _receiver->throttleIsDown()) {
                     _mixer->cutMotors();
                 }
 
                 // Set LED based on arming status
+				//LED, 显示arm状态
                 _board->showArmedStatus(_state.armed);
 
             } // checkReceiver
@@ -311,7 +331,7 @@ namespace hf {
  
             virtual void handle_SET_ARMED(uint8_t  flag)
             {
-                if (flag) {  // got arming command: arm only if throttle is down
+                if (flag) {  // got		 command: arm only if throttle is down
                     if (_receiver->throttleIsDown()) {
                         _state.armed = true;
                     }
@@ -405,14 +425,16 @@ namespace hf {
             void update(void)
             {
                 // Grab control signal if available
-				//检测是否有控制信号
+				//检测是否有控制信号 - 以及起落架arm的控制
                 checkReceiver();
 
                 // Check mandatory sensors
-                checkGyrometer();//陀螺测试仪
-                checkQuaternion();//四元数
+                checkGyrometer();//陀螺测试仪==>角速度
+                checkQuaternion();//四元数 ==> 姿态roll-pitch-yaw
 
                 // Check optional sensors
+				//其他附加传感器:
+				  //运行其: sensor->modifyState(_state, time);
                 checkOptionalSensors();//选项传感器?
             } 
 

@@ -62,6 +62,7 @@ namespace hf {
 
             serialState_t  _state;
 
+			//把uint8_t ==> 序列化为二进制 
             void serialize8(uint8_t a)
             {
                 _outBuf[_outBufSize++] = a;
@@ -187,11 +188,13 @@ namespace hf {
             }
 
             // returns true if reboot request, false otherwise
+			//重启需求:返回true / 否则,返回false
             bool parse(uint8_t c)
             {
                 switch (_state) {
 
                     case IDLE:
+						//重启命令:  返回ture
                         if (c == 'R') {
                             return true; // got reboot command
                         }
@@ -218,6 +221,7 @@ namespace hf {
                         break;
 
                     case HEADER_ARROW:
+						//现在我们预计有效载荷的大小
                         if (c > INBUF_SIZE) {       // now we are expecting the payload size
                             _state = IDLE;
                             return false;

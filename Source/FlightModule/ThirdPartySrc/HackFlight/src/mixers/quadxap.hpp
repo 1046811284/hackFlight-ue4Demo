@@ -32,6 +32,8 @@
 
 namespace hf {
 
+
+	
     class MixerQuadXAP : public Mixer {
 
         public:
@@ -39,7 +41,8 @@ namespace hf {
             MixerQuadXAP(void) 
                 : Mixer(4)
             {
-				//motorDirections:  motor的方向:  1是顺时针转, -1是逆时针转
+				//和无人机的: 类型和旋翼位置有关    
+					//这里是四旋翼"X"型:
                 //                     Th  RR  PF  YR
                 motorDirections[0] = { +1, -1, -1, -1 };    // 1 right front  右前  ===> 索引 1/2/3/4 ==> 分别对应的是哪个旋翼
                 motorDirections[1] = { +1, +1, +1, -1 };    // 2 left rear  左后

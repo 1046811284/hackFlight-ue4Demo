@@ -35,7 +35,7 @@ namespace hf {
 
         private: 
 
-            const float THROTTLE_MARGIN = 0.1f;
+            const float THROTTLE_MARGIN = 0.1f; //判断的间隙
             const float CYCLIC_EXPO     = 0.65f;//循环 exponential(指数)
             const float CYCLIC_RATE     = 0.90f;//循环比率
             const float THROTTLE_EXPO   = 0.20f;//节流 exponential(指数)
@@ -131,7 +131,7 @@ namespace hf {
             }
 
             // Override this if your receiver provides RSSI or other weak-signal detection
-			//重写:  用于: 接收信号强度指示
+			//是否丢失了遥控器的型号:   默认false
             virtual bool lostSignal(void) { return false; }
 
             /**
@@ -219,10 +219,11 @@ namespace hf {
 
             }  // getDemands
 
-		//throttle是否按下:
+		//throttle是否完全向下按:  (向下飞)
             bool throttleIsDown(void)
             {
-                return getRawval(CHANNEL_THROTTLE) < -1 + THROTTLE_MARGIN;
+				//-1判断是否向下: 
+                return getRawval(CHANNEL_THROTTLE) < -1 + THROTTLE_MARGIN;//<-0.9, 就算是向下
             }
 
 		//获取2个开关状态:

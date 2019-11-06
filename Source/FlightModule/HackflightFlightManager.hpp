@@ -73,7 +73,8 @@ class FHackflightFlightManager : public FFlightManager {
 		//手柄-摇杆输入: Receive ==> 调用update,获取手柄输入
         SimReceiver _receiver;
 
-        // Mixer:   pid给出的输出, 经过mixer==> 给到4个Motor    查一下源码???
+        // Mixer:   pid给出的输出, 经过mixer的机型矩阵配置
+			//在_hackflight中有公式用到 , Mixer::RunArmed()中
         hf::MixerQuadXAP _mixer;
 
         // "Sensors" (get values from dynamics)   ===> 查看源码??
@@ -129,9 +130,11 @@ class FHackflightFlightManager : public FFlightManager {
                     break;
 				//没有错误: 更新状态:
                 default:
-					//
+					//更新:   _quat(姿态) 和 _gyro(角速度), 的值
                     _hackflight.update();
-                    // Input deltaT, quat, gyro; output motor values
+                    // Input deltaT, quat, gyro;         output motor values
+					//输入:  对_quat(姿态) 和 _gyro(角速度)初始化
+					//输出:  同时返回:  motors
                     _board.getMotors(time, state.quaternion, state.angularVel, motorvals, 4);
             }
          }
