@@ -425,7 +425,7 @@ public:
 			computeStateDerivative(accelNED, netz);
 
 			// Compute state as first temporal integral of first temporal derivative
-			//*deltatime的作用:  去除帧数影响==> 单位变成1s:
+			//*deltatime的作用:  去除帧数影响==> 单位变成1s: 
 				//(因为每帧都+=, *deltaTime==> 单位变成1s)
 			for (uint8_t i = 0; i < 12; ++i) {
 				_x[i] += dt * _dxdt[i];
