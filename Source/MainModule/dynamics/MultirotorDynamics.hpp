@@ -365,8 +365,8 @@ public:
 		//初始化accelNED:
 		double accelNED[3] = {};
 		//把Z轴的推力的加速度==>转换到惯性坐标系的3个轴上
-		//参数1: up推力/质量,   euler: 矩阵(用于转到惯性坐标系),  accelNED: (结果)
-		//F= ma ==>a=F/m =>:  所以-_U1 / _p->m 是Z轴推力的加速度
+			//参数1: up推力/质量,   euler: 矩阵(用于转到惯性坐标系),  accelNED: (结果)
+			//F= ma ==>a=F/m =>:  所以-_U1 / _p->m 是Z轴推力的加速度
 		bodyZToInertial(-_U1 / _p->m, euler, accelNED);
 
 		// We're airborne once net downward acceleration goes below zero
@@ -383,12 +383,12 @@ public:
 		//在空中起飞的:   检测离地高度,在下降的时候
 		if (_airborne) {
 
-			//处理加速结束的一帧:
-				//_agl <= 0:  即-1, 射线没有hit到 ?? ==>
+			//处理加速向下, 结束的一帧:
+				//_agl <= 0:  即-1, 射线没有hit到 ,返回-1 ==>
 				//netz >= 0:  表示, 没有加速向上飞行或稳定空中 :  设置_airborne = false;
 			if (_agl <= 0 && netz >= 0) {
 
-				_airborne = false;//只执行一次(加速接收的一刻,执行以下)
+				_airborne = false;//只执行一次(帧)(加速接收的一刻,执行以下) ===>把飞机姿态变成000
 
 				//位置和角度/加速度==> 初始化为0
 				_x[STATE_PHI_DOT] = 0;
@@ -405,7 +405,7 @@ public:
 			}
 		}
 
-		// If we're not airborne, we become airborne when downward acceleration has become negative
+		// If we're not airborne, we become airborne when downward acceleration has become negative ==> 当加速度向下时,  airborne = true
 		//(是否是:  加速向上飞行): 
 			//加速向上是: _airborne = true
 			//稳定空中/向下: _airborne= false 			
@@ -415,6 +415,7 @@ public:
 
 		// Once airborne: (加速向上飞), we can update dynamics (就更新物理)
 		//_airborne:  升空 (往上加速飞)
+		//计算加速向上时, 的姿态:
 		if (_airborne) {
 
 			// Compute the state derivatives using Equation 12
@@ -548,6 +549,7 @@ public:
 	 * Sets height above ground level (AGL).
 	 * This method can be called by the kinematic visualization.
 	 */
+	//设置距离地面的高度:  AGL
 	void setAgl(double agl)
 	{
 		_agl = agl;

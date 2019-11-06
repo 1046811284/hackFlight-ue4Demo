@@ -548,7 +548,7 @@ class Vehicle {
             float d = getImpactDistance(startPoint, endPoint);
 
             // The first time we measure, we need to set the offset
-			//第一次时我们需要:  测量偏移高度!!(如:  飞行器中心点, 到地面的offset) offset 
+			//第一次(未起飞时)时我们需要:  测量偏移高度!!(如:  飞行器中心点, 到地面的offset) offset 
             if (_aglOffset == 0) {
                 _aglOffset = d;
             }

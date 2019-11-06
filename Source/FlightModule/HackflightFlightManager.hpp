@@ -42,7 +42,8 @@ class FHackflightFlightManager : public FFlightManager {
         // Level:  2个轴<角度>的pid: roll和pitch
         hf::LevelPid levelPid = hf::LevelPid(0.8);
 
-        // Alt-hold:  保持一定高度飞行的pid
+        // Alt-hold:  
+		//定高飞行pid:   保持一定高度飞行的pid
         hf::AltitudeHoldPid althold = hf::AltitudeHoldPid(
                 10.00f, // altHoldPosP
                 1.00f,  // altHoldVelP
@@ -50,8 +51,8 @@ class FHackflightFlightManager : public FFlightManager {
                 0.10f); // altHoldVelD
 
 
-        // Pos-hold (via simulated optical flow) ==>位置控制,(通过模拟光学流)
-		//无人机光流模块使用技巧
+        // Pos-hold (via simulated optical flow) 
+		//定位置飞行模式: pid
 			//光流模块在无 GPS 环境下，课实时检测飞机水平移动距离，实现对四轴无人机长时间的稳定悬停
         hf::FlowHoldPid flowhold = hf::FlowHoldPid(0.05, 0.05);
 
@@ -111,7 +112,7 @@ class FHackflightFlightManager : public FFlightManager {
         {
         }
 
-
+		//得到motor的转速, 并更新_hackflight的(角速度+姿态)
         virtual void getMotors(const double time, const MultirotorDynamics::state_t & state, double * motorvals) override
         {
 			//update输入:

@@ -78,23 +78,26 @@ class FFlightManager : public FThreadedManager {
             // Compute time deltay in seconds
 			//deltaTime:  这一帧-上一帧时间
 			double dt = currentTime - _previousTime;
-
+		//_dynamics的相关计算:  得到_state
             // Send current motor values and time delay to dynamics
 			//发送当前发动机: 转速,时间
+				//算出推力: _dynamics.U1/2/3/4
             _dynamics->setMotors(_motorvals, dt);
 
             // Update dynamics
 			//更新:  update运动
+				// 计算更新  :  _state (飞行的状态位置/旋转/加速度等) ==> 这样下面可以用 " _dynamics->getState();" 获取状态了!!
             _dynamics->update(dt);
 
             // Get new vehicle state
-			//获取状态:  旋转/位置/加速度等
+			//获取状态_state:  旋转/位置/加速度等
             _state = _dynamics->getState();
 
             // PID controller: update the flight manager (e.g., HackflightManager) with
             // the dynamics state, getting back the motor values
 			//根据:  更新飞行状态  
-				//返回_motorvals 转速: 每个motor的转速
+				//返回_motorvals:   转速: 每个motor的转速
+				//得到motor的转速, 并更新_hackflight的(角速度+姿态)
             this->getMotors(currentTime, _state, _motorvals);
 
             // Track previous time for deltaT
