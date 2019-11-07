@@ -123,7 +123,7 @@ namespace hf {
 
                 // If gyrometer data ready
 				//_gyrometer.ready() :  对_gyrometer值进行更新
-                if (_gyrometer.ready(time)) {
+                if (_gyrometer.ready(time)) { 
 
                     // Adjust gyrometer values based on IMU orientation 
 					//从Board获取  gyrometer, ==>(SimBoard.hpp未实现)
