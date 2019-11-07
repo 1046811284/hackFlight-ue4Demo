@@ -127,6 +127,7 @@ namespace hf {
 
                     // Adjust gyrometer values based on IMU orientation 
 					//从Board获取  gyrometer, ==>(SimBoard.hpp未实现)
+					//通过硬件传感器获得:
                     _board->adjustGyrometer(_gyrometer._x, _gyrometer._y, _gyrometer._z);
 
                     // Update state with gyro rates
@@ -216,7 +217,8 @@ namespace hf {
 
                 // Check whether receiver data is available
 				//检测接收的数据是否有效:  
-					//并设置  _receiver->demands的值
+					//把手柄输入数据rawvals[], 进行一系列公式调整: ==> 设置到demands[]和_aux1State/_aux2State
+					//设置  _receiver->demands的值, 放吧下一步使用
                 if (!_receiver->getDemands(_state.rotation[AXIS_YAW] - _yawInitial)) return;
 
                 // Update PID controllers with receiver demands
@@ -288,6 +290,7 @@ namespace hf {
                 }
             }
 
+			//其他附加传感器:
             void checkOptionalSensors(void)
             {
                 for (uint8_t k=0; k<_sensor_count; ++k) {

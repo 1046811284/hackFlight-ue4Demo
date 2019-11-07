@@ -99,10 +99,12 @@ class FHackflightFlightManager : public FFlightManager {
 		//pid控制器: 初始化 , ==> 状态1或0  ==> 见hackflight.hpp的runPidControllers()使用
 			// Add altitude-hold and position-hold PID controllers in switch position 1
 			//对pidController:  添加到数组, 并设置auxState 为1 ===> switch position为 1时更新 (aux按下时才更新)
+			//高度控制 和  位置控制 的 pid控制器:
 			_hackflight.addPidController(&althold, 1);
 			_hackflight.addPidController(&flowhold, 1);
 
 			// Add rate and level PID controllers for all aux switch positions
+			//速度和角度  的  pid控制器
 			//添加到数组, 但是, auxState 为0  ===> switch positions 任何时候更新 (不用管aux按下否)
 			_hackflight.addPidController(&levelPid);
 			_hackflight.addPidController(&ratePid);
@@ -131,10 +133,10 @@ class FHackflightFlightManager : public FFlightManager {
                     break;
 				//没有错误: 更新状态:
                 default:
-					//更新:   _quat(姿态) 和 _gyro(角速度), 的值
+					//更新:  demands的值:
                     _hackflight.update();
                     // Input deltaT, quat, gyro;         output motor values
-					//输入:  对_quat(姿态) 和 _gyro(角速度)初始化
+					//输入:  对_quat(姿态) 和 _gyro(角速度)初始化  ===> 来着与函数参数 ==> 来自于 dynamics->update()
 					//输出:  同时返回:  motors
                     _board.getMotors(time, state.quaternion, state.angularVel, motorvals, 4);
             }

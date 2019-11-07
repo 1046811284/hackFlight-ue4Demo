@@ -85,7 +85,7 @@ namespace hf {
 			//motors的数量:
             uint8_t nmotors;
 
-			//根据想要达到的角度demands * mixer ==> 得到, 想要的转速  ==> 设置mixer
+			//根据想要达到的角度demands * motorDirections[i] ==> 得到, 想要的转速  ==> 设置mixer
             void runArmed(demands_t demands)
             {
                 // Map throttle demand from [-1,+1] to [0,1]

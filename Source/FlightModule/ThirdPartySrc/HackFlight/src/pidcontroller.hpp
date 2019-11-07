@@ -92,6 +92,7 @@ namespace hf {
 			//计算pid:
 				//target: 目标值    actual: 实际值
 			//实现pid公式:  查看蓝图注释
+				//当得到系统的输出后，将输出经过比例，积分，微分3种运算方式，叠加到输入中，从而控制系统的行为
             float compute(float target, float actual)
             {
                 // Compute error as scaled target minus actual
@@ -121,7 +122,7 @@ namespace hf {
                     _lastError = error;
                 }
 
-				//最终公式:  PID之= P + I +D;
+				//最终公式:  需要的PID输入 = P + I +D;
                 return pterm + iterm + dterm;
             }
 

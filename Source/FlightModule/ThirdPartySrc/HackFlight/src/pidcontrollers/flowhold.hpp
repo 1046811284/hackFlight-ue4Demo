@@ -27,6 +27,7 @@ namespace hf {
 
 	//无人机光流模块使用技巧
 			//光流模块在无 GPS 环境下，课实时检测飞机水平移动距离，实现对四轴无人机长时间的稳定悬停
+	//飞行速度pid控制:
     class FlowHoldPid : public PidController {
 
         friend class Hackflight;

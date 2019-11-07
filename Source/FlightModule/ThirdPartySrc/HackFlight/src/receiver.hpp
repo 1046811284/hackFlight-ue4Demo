@@ -153,8 +153,8 @@ namespace hf {
                 _demandScale = demandScale;
             }
 
-			//1)检测接收的数据是否有效:  查看引用
-			//2)设置demands 和 _aux1State/_aux2State的值:
+			//1)把手柄输入数据rawvals[], 进行一系列公式调整: ==> 设置到demands[]和_aux1State/_aux2State
+				//2)设置demands 和 _aux1State/_aux2State的值:  ==> 重新得到输入
             bool getDemands(float yawAngle)
             {
                 // Wait till there's a new frame
@@ -164,6 +164,8 @@ namespace hf {
                 // Read raw channel values
                 readRawvals();
 
+			//===>对输入值: 进行一系列调整:
+					//绝对值-->线性计算--->映射到[-0.5,+0.5]-->trim微调整-->得到调整后的值:
                 // Convert raw [-1,+1] to absolute value
 				//把[-1,+1] ,转换为绝对值
                 demands.roll  = makePositiveCommand(CHANNEL_ROLL);

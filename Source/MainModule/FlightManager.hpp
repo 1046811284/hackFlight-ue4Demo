@@ -81,7 +81,8 @@ class FFlightManager : public FThreadedManager {
 		//_dynamics的相关计算:  得到_state
             // Send current motor values and time delay to dynamics
 			//发送当前发动机: 转速,时间
-				//算出推力: _dynamics.U1/2/3/4
+				//算出推力: _dynamics.U1/2/3/4   
+				//_motorvals值, 取自下方 "this->getMotors(..."
             _dynamics->setMotors(_motorvals, dt);
 
             // Update dynamics

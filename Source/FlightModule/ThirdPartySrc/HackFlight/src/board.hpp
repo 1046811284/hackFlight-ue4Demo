@@ -69,6 +69,7 @@ namespace hf {
             virtual void    serialWriteByte(uint8_t c) { (void)c; }
 
             // --------------------------- Adjust IMU readings based on IMU mounting ------------------------------------
+			//IMU: 惯性测量单元是测量物体三轴姿态角(或角速率)以及加速度的装置。
             virtual void adjustGyrometer(float & gx, float & gy, float & gz) { (void)gx; (void)gy; (void)gz; }
             virtual void adjustQuaternion(float & qw, float & qx, float & qy, float & qz) { (void)qw; (void)qx; (void)qy; (void)qz; }
             virtual void adjustRollAndPitch(float & roll, float & pitch) { (void)roll; (void)pitch; }

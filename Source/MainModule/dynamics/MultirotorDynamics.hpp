@@ -355,6 +355,7 @@ public:
 		//这一帧-上一帧时间:  即deltaTime
 		//double dt = currentTime - _previousTime;
 	//update:  更新飞行的状态:  ===> 计算更新  :  _state (飞行的状态位置/旋转/加速度等)
+		//computeStateDerivative():求得: _dxdt[0]到_dxdt[11]值  ===>  从而初始化 _state所有成员值
 	void update(double dt)
 	{
 		// Use the current Euler angles to rotate the orthogonal thrust vector into the inertial frame.
@@ -365,7 +366,7 @@ public:
 		//初始化accelNED:
 		double accelNED[3] = {};
 		//把Z轴的推力的加速度==>转换到惯性坐标系的3个轴上
-			//参数1: up推力/质量,   euler: 矩阵(用于转到惯性坐标系),  accelNED: (结果)
+			//参数1: up推力/质量,   euler: 矩阵(用于转到惯性坐标系), ===> 初始化到:  accelNED: (结果)
 			//F= ma ==>a=F/m =>:  所以-_U1 / _p->m 是Z轴推力的加速度
 		bodyZToInertial(-_U1 / _p->m, euler, accelNED);
 
@@ -499,8 +500,8 @@ public:
 	virtual void setMotors(double* motorvals, double dt)
 	{
 		// Convert the  motor values to radians per second
+		//根据旋翼的转速:  算出==>每s, 多少度
 		for (unsigned int i = 0; i < _motorCount; ++i) {
-			//根据旋翼的转速:  每s, 多少度
 			//motorvals[i]:  是[0-1]的输入值==>影响(计算),当前转速
 			_omegas[i] = computeMotorSpeed(motorvals[i]); //rad/s
 		}
