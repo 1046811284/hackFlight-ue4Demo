@@ -533,6 +533,7 @@ public:
 	 *
 	 *  @return data structure containing pose
 	 */
+	//用于设置载具的位置/旋转
 	pose_t getPose(void)
 	{
 		pose_t pose = {};
