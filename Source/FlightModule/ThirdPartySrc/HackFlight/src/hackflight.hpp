@@ -103,6 +103,7 @@ namespace hf {
 
                     // Update state with new quaternion to yield Euler angles
 					//2)把_quaternion==>定义到  _state.rotation成员中:
+						//方便下面: runPidControllers()==>  pidController->modifyDemands(_state, _demands); 使用
                     _quaternion.modifyState(_state, time);
 
                     // Adjust Euler angles to compensate for sloppy IMU mounting
@@ -132,6 +133,7 @@ namespace hf {
 
                     // Update state with gyro rates
 					//_gyrometer 写入到 :  _state.angularVel[]数组中
+						//方便下面: runPidControllers()==>  pidController->modifyDemands(_state, _demands); 使用
                     _gyrometer.modifyState(_state, time);
 
                     // For PID control, start with demands from receiver, scaling roll/pitch/yaw by constant

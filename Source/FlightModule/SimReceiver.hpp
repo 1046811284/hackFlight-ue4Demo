@@ -89,4 +89,9 @@ class SimReceiver : public hf::Receiver {
 			 return Joystick::error_t::ERROR_NOERROR;
 		}
 
+		float GetRawvalsInput(int i)
+		{
+			return  rawvals[i];
+		}
+
 }; // class SimReceiver

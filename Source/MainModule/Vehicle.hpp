@@ -112,6 +112,7 @@ class Vehicle {
             // Get vehicle pose from dynamics
 			//获取姿态:  从_dynamics
             MultirotorDynamics::pose_t pose = _dynamics->getPose();
+			//UKismetSystemLibrary::PrintString(nullptr, FString::Printf(TEXT("input %f, %f, %f"), pose.location[0], pose.location[1], pose.location[2]));
 
             // Set vehicle pose in animation
 			//设置姿态:  位置 + 旋转

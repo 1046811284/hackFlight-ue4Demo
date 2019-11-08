@@ -24,6 +24,7 @@
 #include "SimReceiver.hpp"
 #include "SimBoard.hpp"
 #include "SimSensors.hpp"
+#include "Kismet/KismetSystemLibrary.h"
 
 class FHackflightFlightManager : public FFlightManager {
 
@@ -139,6 +140,7 @@ class FHackflightFlightManager : public FFlightManager {
 					//输入:  对_quat(姿态) 和 _gyro(角速度)初始化  ===> 来着与函数参数 ==> 来自于 dynamics->update()
 					//输出:  同时返回:  motors
                     _board.getMotors(time, state.quaternion, state.angularVel, motorvals, 4);
+					
             }
          }
 
