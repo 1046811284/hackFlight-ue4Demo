@@ -172,7 +172,7 @@ class Vehicle {
             }
         }
 
-		//创建相机和弹簧臂:
+		//创建相机和弹簧臂:  distanceMeters距离---elevationMeters高度
         void buildPlayerCameras(float distanceMeters, float elevationMeters)
         {
 			//初始化弹簧臂:
@@ -282,16 +282,18 @@ class Vehicle {
             _propCount = 0;
         }
 
-		//飞行器上的:  声音+ 相机/弹簧臂
+		//飞行器上的:  机身Mehs + 声音 + 相机/弹簧臂
         void buildFull(APawn* pawn, UStaticMesh* frameMesh, float chaseCameraDistanceMeters, float chaseCameraElevationMeters)
         {
+			//构建Mesh
             build(pawn, frameMesh);
 
-            // Build the player-view cameras: 相机/弹簧臂
+            // Build the player-view cameras: 
+			//相机/弹簧臂
             buildPlayerCameras(chaseCameraDistanceMeters, chaseCameraElevationMeters);
 
             // Get sound cue from Contents
-			//声音组件:
+	//声音组件:
             static ConstructorHelpers::FObjectFinder<USoundCue> soundCue(TEXT("/Game/Flying/Audio/MotorSoundCue"));
 
             // Store a reference to the Cue asset - we'll need it later.
@@ -306,7 +308,7 @@ class Vehicle {
             // Attach the sound to the pawn's root, the sound follows the pawn around
             _audioComponent->SetupAttachment(_pawn->GetRootComponent());
     
-			//平衡环相机:
+	//平衡环相机:
             // Create a spring-arm for the gimbal
             _gimbalSpringArm = _pawn->CreateDefaultSubobject<USpringArmComponent>(TEXT("GimbalSpringArm"));
             _gimbalSpringArm->SetupAttachment(_pawn->GetRootComponent());

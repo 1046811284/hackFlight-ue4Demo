@@ -58,8 +58,8 @@ class Phantom {
 		//构建:  vehicle的各个Mesh
         void build(APawn * pawn)
         {
-			//mesh1:
-            vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.5);
+			//构建:  相机-弹簧臂-Mesh  3部分
+            vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.5);//相机的距离1.5m, 高度0.5m
 
             // Add propellers
 			//添加组件:  4个旋翼  + 位置

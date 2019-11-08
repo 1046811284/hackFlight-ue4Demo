@@ -81,7 +81,8 @@ class TinyWhoop {
 		//构建mesh:
         void build(APawn * pawn)
         {
-            // Build the frame: 机身
+            // Build the frame: 
+			//构建:  相机-弹簧臂-Mesh  3部分
             vehicle.buildFull(pawn, FrameStatics.mesh.Get(), 1.5, 0.50);
 
             // Add propellers:  4个旋翼 + 位置
